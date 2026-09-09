@@ -1,12 +1,12 @@
-HERITAGE READINESS TOOL — METHODOLOGY
+HERITAGE READINESS MODEL — METHODOLOGY
 Version 0.1.0
 Paired with: index.html v0.1.0
 
 ============================================================
-1. WHAT THIS TOOL IS
+1. WHAT THIS MODEL IS
 ============================================================
 
-A Heritage Readiness assessment tool for traditional orchards and
+A Heritage Readiness assessment model for traditional orchards and
 agricultural landscapes. It does not claim to submit anything to
 UNESCO on a site's behalf — official nomination is a state-level
 process. Instead, it answers a narrower, more useful question:
@@ -16,13 +16,13 @@ process. Instead, it answers a narrower, more useful question:
   should be done next?
 
 This is the same function UNESCO's own "Preliminary Assessment"
-process serves officially (Operational Guidelines §122) — this tool
+process serves officially (Operational Guidelines §122) — this model
 is a self-serve, accessible version of that same logic, built to be
 run by a researcher, community, or local authority before any formal
 process begins.
 
 Ma'alia's ancient olive orchards are the first site run through this
-tool — a pilot case, not the tool's sole purpose. The architecture is
+model — a pilot case, not the model's sole purpose. The architecture is
 built to be reusable: any orchard or agricultural landscape can be
 entered as a new site (see the `sites` table in the database).
 
@@ -30,7 +30,7 @@ entered as a new site (see the `sites` table in the database).
 2. THE THREE PATHS
 ============================================================
 
-"UNESCO recognition" is not one process. This tool covers two
+"UNESCO recognition" is not one process. This model covers two
 conventions and three practical routes:
 
   World Heritage (1972 Convention)
@@ -65,14 +65,14 @@ Reserves (Man and the Biosphere Programme) and the FAO's GIAHS
 (Globally Important Agricultural Heritage Systems) designation. Both
 are real, relevant mechanisms for a living agricultural landscape,
 but neither follows the individual, criteria-based nomination
-structure this tool is built around. GIAHS in particular is run by
+structure this model is built around. GIAHS in particular is run by
 the FAO, not UNESCO, and is not a "UNESCO announcement" at all.
 
 ============================================================
 3. THE SIXTEEN STAGES
 ============================================================
 
-Every question in the tool belongs to one of sixteen stages. Eight
+Every question in the model belongs to one of sixteen stages. Eight
 map directly onto sections of UNESCO's own official Preliminary
 Assessment request format (Operational Guidelines, Annex 3). Eight
 go beyond what either convention formally requires at this stage —
@@ -94,7 +94,7 @@ will demand later, not because they're less important.
   12 Management Plan                         [OFFICIAL — Annex 3 §7.b]
   13 Economic Sustainability                 [EXTENSION]
   14 Boundaries & GIS                        [EXTENSION, expands §1.e]
-  15 Dashboard, Gap Analysis & Roadmap       [EXTENSION — the tool's
+  15 Dashboard, Gap Analysis & Roadmap       [EXTENSION — the model's
                                               core original contribution]
 
 Design rule carried through the whole schema: "Evidence Required" is
@@ -120,7 +120,7 @@ example: no free, prior and informed consent (FPIC) on the ICH
 track is a Critical Gap on its own — no amount of strong evidence
 elsewhere compensates for it. This mirrors how UNESCO itself treats
 these criteria: ICH's own AND-gate logic (all of R.1-R.5, or all of
-U.1-U.6) already works this way; the tool's gatekeeper logic just
+U.1-U.6) already works this way; the model's gatekeeper logic just
 makes that structure visible and explicit rather than implicit.
 
 ============================================================
@@ -131,7 +131,7 @@ Every stage, and every question within it, carries a `source_type`
 field: either `official_unesco` or `tool_extension`. This is a
 database-level field, not just documentation — anyone (a researcher,
 a professor, a future collaborator) can query exactly which parts of
-this tool's logic come directly from UNESCO's own governing texts,
+this model's logic come directly from UNESCO's own governing texts,
 and which parts were added by this project, at any time.
 
 ============================================================
