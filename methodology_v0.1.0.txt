@@ -1,0 +1,203 @@
+HERITAGE READINESS TOOL — METHODOLOGY
+Version 0.1.0
+Paired with: index.html v0.1.0
+
+============================================================
+1. WHAT THIS TOOL IS
+============================================================
+
+A Heritage Readiness assessment tool for traditional orchards and
+agricultural landscapes. It does not claim to submit anything to
+UNESCO on a site's behalf — official nomination is a state-level
+process. Instead, it answers a narrower, more useful question:
+
+  If we wanted to pursue international recognition for this place
+  in the future, what do we already have, what is missing, and what
+  should be done next?
+
+This is the same function UNESCO's own "Preliminary Assessment"
+process serves officially (Operational Guidelines §122) — this tool
+is a self-serve, accessible version of that same logic, built to be
+run by a researcher, community, or local authority before any formal
+process begins.
+
+Ma'alia's ancient olive orchards are the first site run through this
+tool — a pilot case, not the tool's sole purpose. The architecture is
+built to be reusable: any orchard or agricultural landscape can be
+entered as a new site (see the `sites` table in the database).
+
+============================================================
+2. THE THREE PATHS
+============================================================
+
+"UNESCO recognition" is not one process. This tool covers two
+conventions and three practical routes:
+
+  World Heritage (1972 Convention)
+    - Site- or landscape-based.
+    - Satisfy AT LEAST ONE of 10 criteria (an OR-gate).
+    - Governed by: Operational Guidelines for the Implementation of
+      the World Heritage Convention (WHC.25/01, 16 July 2025).
+
+  Intangible Cultural Heritage — Representative List (2003 Convention)
+    - Community- and knowledge-based, not site-based.
+    - Satisfy ALL 5 of R.1-R.5 (an AND-gate, no partial credit).
+    - Real example: Al-Mihrass tree (Jordan, inscribed 2025).
+
+  Intangible Cultural Heritage — Urgent Safeguarding List (2003 Convention)
+    - Same community basis, but the practice must be demonstrably at
+      risk of disappearing (U.2 requires this explicitly).
+    - Satisfy ALL 6 of U.1-U.6.
+    - Real example: Traditional Turkish Olive Cultivation Practices
+      (Turkiye, inscribed 2023).
+    - Both ICH lists governed by: Operational Directives for the
+      Implementation of the 2003 Convention (2024 edition).
+
+A genuinely useful asymmetry to keep in mind: on the World Heritage
+side, risk/danger is purely a POST-inscription monitoring category
+(the List of World Heritage in Danger) — it never helps a nomination
+succeed. On the ICH side, demonstrating urgent risk (U.2) is itself a
+PATHWAY to inscription. Same underlying concept, opposite structural
+role, depending on which convention applies.
+
+Deliberately excluded, by scope, not oversight: UNESCO Biosphere
+Reserves (Man and the Biosphere Programme) and the FAO's GIAHS
+(Globally Important Agricultural Heritage Systems) designation. Both
+are real, relevant mechanisms for a living agricultural landscape,
+but neither follows the individual, criteria-based nomination
+structure this tool is built around. GIAHS in particular is run by
+the FAO, not UNESCO, and is not a "UNESCO announcement" at all.
+
+============================================================
+3. THE SIXTEEN STAGES
+============================================================
+
+Every question in the tool belongs to one of sixteen stages. Eight
+map directly onto sections of UNESCO's own official Preliminary
+Assessment request format (Operational Guidelines, Annex 3). Eight
+go beyond what either convention formally requires at this stage —
+marked as extensions because they anticipate what a FULL nomination
+will demand later, not because they're less important.
+
+  0  Pathway Selector                        [EXTENSION]
+  1  Identification                          [OFFICIAL — Annex 3 §1]
+  2  Description                             [OFFICIAL — Annex 3 §2]
+  3  Significance & Track Strategy           [OFFICIAL — Annex 3 §3]
+  4  Historical Depth & Continuity           [EXTENSION]
+  5  Integrity                               [OFFICIAL — Annex 3 §4]
+  6  Authenticity                            [OFFICIAL — Annex 3 §5]
+  7  Comparative Analysis                    [OFFICIAL — Annex 3 §6]
+  8  Community & Intangible Values           [EXTENSION, expands §7.c]
+  9  Conservation Status by Component        [EXTENSION, expands §4.b]
+  10 Threat Assessment & Risk Matrix         [EXTENSION]
+  11 Legal Protection                        [OFFICIAL — Annex 3 §7.a]
+  12 Management Plan                         [OFFICIAL — Annex 3 §7.b]
+  13 Economic Sustainability                 [EXTENSION]
+  14 Boundaries & GIS                        [EXTENSION, expands §1.e]
+  15 Dashboard, Gap Analysis & Roadmap       [EXTENSION — the tool's
+                                              core original contribution]
+
+Design rule carried through the whole schema: "Evidence Required" is
+not its own stage. Every question in every stage carries its own
+expected evidence type as a built-in property (see the
+`assessment_questions.expected_evidence_type_id` field) — this
+mirrors how Annex 3 itself works: every official section already
+demands specifics and documentation, not a general attachment at
+the end.
+
+============================================================
+4. THE GATEKEEPER PRINCIPLE
+============================================================
+
+The final output (Stage 15) never reduces the assessment to a single
+blended score. Status is categorical per stage: Ready / Needs
+Evidence / Major Gap / Critical Gap.
+
+Some questions are marked as GATEKEEPERS (`is_gatekeeper = true`).
+A failing gatekeeper answer overrides every other answer in its
+stage, regardless of how strong the rest of the assessment is. For
+example: no free, prior and informed consent (FPIC) on the ICH
+track is a Critical Gap on its own — no amount of strong evidence
+elsewhere compensates for it. This mirrors how UNESCO itself treats
+these criteria: ICH's own AND-gate logic (all of R.1-R.5, or all of
+U.1-U.6) already works this way; the tool's gatekeeper logic just
+makes that structure visible and explicit rather than implicit.
+
+============================================================
+5. SOURCE-TYPE TRACEABILITY
+============================================================
+
+Every stage, and every question within it, carries a `source_type`
+field: either `official_unesco` or `tool_extension`. This is a
+database-level field, not just documentation — anyone (a researcher,
+a professor, a future collaborator) can query exactly which parts of
+this tool's logic come directly from UNESCO's own governing texts,
+and which parts were added by this project, at any time.
+
+============================================================
+6. DATA EXTRACTION METHODOLOGY (for the individual article-processing
+   pipeline — DRAFT, for the eventual standalone API function)
+============================================================
+
+This section is a working draft of the extraction rules that any
+future automated pipeline (e.g. a Supabase Edge Function calling the
+Anthropic API directly) must be given explicitly, since a standalone
+API call has no memory of the reasoning that produced these rules —
+it only knows what is written into its own instructions.
+
+  6.1 Cross-check before insert
+      Before adding any new record, check it against what already
+      exists in the target table (by name, by citation, or by the
+      most specific available identifier). Never assume a new
+      source is reporting genuinely new information without this
+      check first — the Peqi'in project's extraction history (a
+      53-specimen undercount in one chapter, an entire chapter
+      missed, two objects given identical basket numbers) is the
+      concrete reason this rule exists.
+
+  6.2 Flag ambiguity rather than resolve it silently
+      If two sources disagree, or if extracted data does not cleanly
+      map onto an existing question or evidence type, flag it for
+      human review rather than picking an interpretation
+      automatically.
+
+  6.3 Tag source_type on every new question or stage
+      Any new question added to `assessment_questions` must be
+      explicitly tagged `official_unesco` (traceable to a specific
+      paragraph/section of one of the two governing conventions) or
+      `tool_extension` (added based on other literature or project
+      judgment). Never leave this field to a default.
+
+  6.4 Evidence must be linked, not just asserted
+      A claim extracted from an article is not usable on its own —
+      it must be written into `evidence_records`, linked to the
+      specific `assessment_answers` row it supports, with a real
+      source citation.
+
+  6.5 Quantitative thresholds require their source study named
+      explicitly (e.g. CBH antiquity thresholds, drought-resilience
+      percentages, groundwater-depth triggers) — never presented as
+      a general rule without attribution to the specific study it
+      came from.
+
+  6.6 Human approval before commit
+      No automated extraction writes directly to `assessment_answers`
+      or `evidence_records` without an explicit human approval step.
+      The pipeline's job is to propose; a person decides.
+
+This draft should be revisited and hardened once several real
+articles have been processed manually (see Section 1) and the
+extraction rules stop changing significantly between articles —
+that stability is the signal that the rules are mature enough to
+encode into a standalone, unsupervised function.
+
+============================================================
+CHANGELOG
+============================================================
+
+v0.1.0 — Initial release. Home/methodology page built; live-reads
+the `stages` table from Supabase rather than hardcoding stage
+content, matching the "read from the database, never hardcode"
+principle carried over from the Peqi'in Cave project. Database
+schema (16 tables, 2 views) and GitHub repository both created and
+verified in the same session.

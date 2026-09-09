@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heritage Readiness Tool — Methodology</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --stone: #EDE8DC;
+    --stone-dim: #E1DACB;
+    --ink: #23261F;
+    --ink-soft: #4A4E42;
+    --olive: #6B7A5E;
+    --olive-deep: #4F5C45;
+    --clay: #A8623D;
+    --slate: #3D5A6C;
+    --gold: #B8933A;
+    --line: rgba(35,38,31,0.14);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--stone);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    line-height: 1.55;
+    font-size: 17px;
+  }
+  h1, h2, h3, .display {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  code, .mono {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  a { color: var(--slate); }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 28px; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    background: var(--ink);
+    color: var(--stone);
+    padding: 110px 0 90px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero .wrap { position: relative; z-index: 2; }
+  .hero-rings {
+    position: absolute;
+    right: -120px;
+    top: -140px;
+    width: 620px;
+    height: 620px;
+    opacity: 0.16;
+    z-index: 1;
+  }
+  .hero h1 {
+    font-size: clamp(2.1rem, 4.6vw, 3.4rem);
+    line-height: 1.12;
+    max-width: 15ch;
+    margin: 0 0 26px;
+    color: var(--stone);
+  }
+  .hero p {
+    max-width: 56ch;
+    font-size: 1.15rem;
+    color: #C9C3B2;
+    margin: 0 0 8px;
+  }
+  .hero .tag {
+    display: inline-block;
+    font-size: 0.82rem;
+    color: var(--gold);
+    margin-bottom: 22px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ---------- Sections ---------- */
+  section { padding: 74px 0; }
+  section.alt { background: var(--stone-dim); }
+  .kicker {
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    max-width: 62ch;
+    margin: 14px 0 44px;
+  }
+  h2.section-title {
+    font-size: clamp(1.6rem, 3vw, 2.1rem);
+    margin: 0;
+  }
+
+  /* ---------- Three paths ---------- */
+  .paths {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr 1fr;
+    gap: 20px;
+    align-items: stretch;
+  }
+  .path-card {
+    border-radius: 4px;
+    padding: 30px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .path-card.wh {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-top: 5px solid var(--slate);
+  }
+  .path-card.ich-rep {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-top: 5px solid var(--olive);
+  }
+  .path-card.ich-urgent {
+    background: #FBF3E2;
+    border: 1px solid rgba(184,147,58,0.35);
+    border-top: 5px solid var(--gold);
+  }
+  .path-card .label { font-size: 0.85rem; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; }
+  .path-card h3 { font-size: 1.25rem; margin: 0; }
+  .path-card .gate {
+    font-size: 0.98rem;
+    font-weight: 500;
+    padding-top: 6px;
+    border-top: 1px solid var(--line);
+    margin-top: auto;
+  }
+  .path-card.wh .gate { color: var(--slate); }
+  .path-card.ich-rep .gate { color: var(--olive-deep); }
+  .path-card.ich-urgent .gate { color: #8A6B1E; }
+  .path-card p.desc { font-size: 0.96rem; color: var(--ink-soft); margin: 0; flex-grow: 1; }
+  .scope-note {
+    margin-top: 26px;
+    font-size: 0.94rem;
+    color: var(--ink-soft);
+    border-left: 3px solid var(--line);
+    padding-left: 18px;
+  }
+
+  /* ---------- Stage spine ---------- */
+  .spine { position: relative; margin-top: 10px; }
+  .spine::before {
+    content: '';
+    position: absolute;
+    left: 27px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: var(--line);
+  }
+  .stage {
+    position: relative;
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    gap: 18px;
+    align-items: start;
+    padding: 15px 0;
+  }
+  .stage-num {
+    position: relative;
+    z-index: 2;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--stone-dim);
+    border: 2px solid var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.92rem;
+    flex-shrink: 0;
+  }
+  .stage.official .stage-num { border-color: var(--slate); color: var(--slate); }
+  .stage.extension .stage-num { border-color: var(--olive-deep); color: var(--olive-deep); }
+  .stage-body h4 { margin: 5px 0 5px; font-size: 1.05rem; font-family: 'IBM Plex Sans', sans-serif; font-weight: 600; }
+  .stage-body p { margin: 0; font-size: 0.93rem; color: var(--ink-soft); max-width: 62ch; }
+  .stage-tag {
+    align-self: center;
+    font-size: 0.74rem;
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 4px 10px;
+    border-radius: 3px;
+    white-space: nowrap;
+    height: fit-content;
+  }
+  .stage.official .stage-tag { background: rgba(61,90,108,0.12); color: var(--slate); }
+  .stage.extension .stage-tag { background: rgba(107,122,94,0.15); color: var(--olive-deep); }
+
+  /* ---------- Sources ---------- */
+  .sources { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .source-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 26px;
+  }
+  .source-card .year { font-family: 'IBM Plex Mono', monospace; color: var(--clay); font-size: 0.85rem; }
+  .source-card h3 { font-size: 1.1rem; margin: 8px 0 10px; }
+  .source-card p { font-size: 0.92rem; color: var(--ink-soft); margin: 0; }
+
+  footer {
+    padding: 44px 0 60px;
+    color: var(--ink-soft);
+    font-size: 0.88rem;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  footer a { color: var(--ink-soft); }
+  #loading-note { font-size: 0.85rem; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; }
+
+  @media (max-width: 760px) {
+    .paths { grid-template-columns: 1fr; }
+    .sources { grid-template-columns: 1fr; }
+    .stage { grid-template-columns: 40px 1fr; }
+    .stage-tag { grid-column: 2; justify-self: start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <svg class="hero-rings" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="100" cy="100" r="30" stroke="#EDE8DC" stroke-width="0.6"/>
+    <circle cx="100" cy="100" r="55" stroke="#EDE8DC" stroke-width="0.6"/>
+    <circle cx="100" cy="100" r="80" stroke="#EDE8DC" stroke-width="0.6"/>
+    <circle cx="100" cy="100" r="98" stroke="#EDE8DC" stroke-width="0.5"/>
+    <path d="M100 20 C 130 60, 150 90, 170 100" stroke="#B8933A" stroke-width="1" opacity="0.7"/>
+    <path d="M100 20 C 90 55, 95 85, 100 100" stroke="#B8933A" stroke-width="1" opacity="0.5"/>
+  </svg>
+  <div class="wrap">
+    <span class="tag">HERITAGE READINESS TOOL</span>
+    <h1>Before you nominate, know what you actually have.</h1>
+    <p>A working assessment methodology for traditional orchards and agricultural landscapes — built directly from UNESCO's own governing conventions, not a checklist invented from scratch.</p>
+    <p>Pilot case study: the ancient olive orchards of Ma'alia.</p>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <h2 class="section-title">Three paths, not one</h2>
+    <p class="kicker">"UNESCO recognition" is not a single process. This tool covers two conventions and three practical routes, each with a genuinely different bar for what counts as enough.</p>
+    <div class="paths">
+      <div class="path-card wh">
+        <span class="label">1972 CONVENTION</span>
+        <h3>World Heritage</h3>
+        <p class="desc">Site- or landscape-based. Judged against ten criteria covering culture, history, and land use.</p>
+        <div class="gate">Satisfy at least ONE of 10 criteria</div>
+      </div>
+      <div class="path-card ich-rep">
+        <span class="label">2003 CONVENTION</span>
+        <h3>ICH — Representative List</h3>
+        <p class="desc">Community-centered. Knowledge, skills, and practices — not the physical site itself.</p>
+        <div class="gate">Satisfy ALL 5 of R.1–R.5</div>
+      </div>
+      <div class="path-card ich-urgent">
+        <span class="label">2003 CONVENTION</span>
+        <h3>ICH — Urgent Safeguarding</h3>
+        <p class="desc">Same community basis, but the practice must be demonstrably at risk of disappearing.</p>
+        <div class="gate">Satisfy ALL 6 of U.1–U.6</div>
+      </div>
+    </div>
+    <p class="scope-note">This tool deliberately covers only these three routes. UNESCO Biosphere Reserves (Man and the Biosphere Programme) and the FAO's GIAHS designation are adjacent, genuinely relevant mechanisms — left out by choice, not oversight, because they don't follow this same individual, criteria-based nomination structure.</p>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <h2 class="section-title">Sixteen stages</h2>
+    <p class="kicker">Every question the tool asks belongs to one of sixteen stages. Eight map directly onto UNESCO's own Preliminary Assessment format; eight go beyond it, by deliberate design — each marked here so the distinction is never hidden.</p>
+    <div id="stage-spine" class="spine">
+      <p class="mono" id="loading-note">Loading live stage data from the database…</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2 class="section-title">Grounded in the source documents</h2>
+    <p class="kicker">Every "official" tag on this page traces to one of these two texts, read directly — not summarized secondhand.</p>
+    <div class="sources">
+      <div class="source-card">
+        <span class="year">WHC.25/01 · 16 July 2025</span>
+        <h3>Operational Guidelines for the Implementation of the World Heritage Convention</h3>
+        <p>Defines the ten criteria, the three-type Cultural Landscape typology, the seven authenticity attributes, the three integrity conditions, and the official Preliminary Assessment format (Annex 3) this tool's stage structure is built on.</p>
+      </div>
+      <div class="source-card">
+        <span class="year">2024 edition</span>
+        <h3>Operational Directives for the Implementation of the 2003 Convention</h3>
+        <p>Defines the Representative List (R.1–R.5) and Urgent Safeguarding List (U.1–U.6) criteria, and the free, prior and informed consent (FPIC) standard governing the community-consent stage.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap" style="display:flex; justify-content:space-between; width:100%; flex-wrap:wrap; gap:10px;">
+    <span class="mono">v0.1.0</span>
+    <a href="https://github.com/minteha/heritage-readiness-tool" class="mono">github.com/minteha/heritage-readiness-tool</a>
+  </div>
+</footer>
+
+<script>
+const SUPABASE_URL = 'https://dntqhsrxbmhdbfyqnimk.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRudHFoc3J4Ym1oZGJmeXFuaW1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTk1NTIsImV4cCI6MjEwNDQ3NTU1Mn0.SyxoJflfFLX3UkqK7HKaJES2DGdjuI5BjnWz3YYIsiE';
+
+const headers = {
+  apikey: SUPABASE_ANON_KEY,
+  Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+};
+
+async function loadStages() {
+  const container = document.getElementById('stage-spine');
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/stages?select=*&order=stage_number.asc`, { headers });
+    if (!res.ok) throw new Error('fetch failed');
+    const stages = await res.json();
+
+    container.innerHTML = '';
+    stages.forEach(s => {
+      const isOfficial = s.source_type === 'official_unesco';
+      const div = document.createElement('div');
+      div.className = `stage ${isOfficial ? 'official' : 'extension'}`;
+      div.innerHTML = `
+        <div class="stage-num">${s.stage_number}</div>
+        <div class="stage-body">
+          <h4>${s.name}</h4>
+          <p>${s.description}</p>
+        </div>
+        <div class="stage-tag">${isOfficial ? 'Official UNESCO' + (s.annex3_section ? ' · ' + s.annex3_section : '') : 'Tool Extension'}</div>
+      `;
+      container.appendChild(div);
+    });
+  } catch (e) {
+    container.innerHTML = '<p class="mono" style="color:#A8623D;">Could not load live stage data. Check the Supabase connection.</p>';
+    console.error(e);
+  }
+}
+
+loadStages();
+</script>
+
+</body>
+</html>
