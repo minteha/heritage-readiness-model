@@ -234,7 +234,7 @@ async function renderPath() {
 
   const statusColor = s => ({ ready: 'var(--olive)', needs_evidence: 'var(--gold)', major_gap: 'var(--clay)', critical_gap: 'var(--alert)' }[s] || 'var(--line)');
 
-  const stagesHtml = applicableStages.filter(st => st.stage_number !== 3).map(st => {
+  const stagesHtml = applicableStages.filter(st => st.stage_number !== 3 && st.stage_number !== 7).map(st => {
     const answers = answersByStage[st.stage_number] || [];
     const rows = answers.length
       ? answers.map(a => `
