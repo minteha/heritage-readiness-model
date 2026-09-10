@@ -215,15 +215,94 @@
   footer a { color: var(--ink-soft); }
   #loading-note { font-size: 0.85rem; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; }
 
+  /* ---------- Page shell: sidebar + main content ---------- */
+  /* Simple, well-understood flex layout, deliberately -- no JS
+     toggle logic, so it degrades predictably even unverified. */
+  .page-shell {
+    display: flex;
+    align-items: flex-start;
+  }
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: #fff;
+    border-right: 1px solid var(--line);
+    padding: 28px 22px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .sidebar h2 {
+    font-size: 1.05rem;
+    margin: 0 0 4px;
+  }
+  .sidebar .sidebar-sub {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    margin-bottom: 20px;
+  }
+  .site-link {
+    display: block;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .site-link:last-child { border-bottom: none; }
+  .site-link .site-name {
+    font-weight: 500;
+    font-size: 0.94rem;
+  }
+  .site-link .site-region {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-top: 2px;
+  }
+  .sidebar-empty {
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    font-style: italic;
+    line-height: 1.5;
+  }
+  .sidebar-error {
+    font-size: 0.85rem;
+    color: var(--clay);
+  }
+  .main-col { flex: 1; min-width: 0; }
+
   @media (max-width: 760px) {
     .paths { grid-template-columns: 1fr; }
     .sources { grid-template-columns: 1fr; }
     .stage { grid-template-columns: 40px 1fr; }
     .stage-tag { grid-column: 2; justify-self: start; }
+
+    /* Sidebar stacks above content on small screens instead of
+       sitting alongside it -- avoids sticky-positioning quirks on
+       mobile browser chrome, and needs no JS to work correctly. */
+    .page-shell { flex-direction: column; }
+    .sidebar {
+      width: 100%;
+      position: static;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--line);
+    }
   }
 </style>
 </head>
 <body>
+
+<div class="page-shell">
+<aside class="sidebar">
+  <h2>Case Studies</h2>
+  <p class="sidebar-sub">All sites assessed with this model.</p>
+  <div id="site-list">
+    <p class="mono" style="font-size:0.82rem; color:var(--ink-soft);">Loading…</p>
+  </div>
+</aside>
+<div class="main-col">
 
 <div class="hero">
   <svg class="hero-rings" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -306,6 +385,9 @@
   </div>
 </footer>
 
+</div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://dntqhsrxbmhdbfyqnimk.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRudHFoc3J4Ym1oZGJmeXFuaW1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTk1NTIsImV4cCI6MjEwNDQ3NTU1Mn0.SyxoJflfFLX3UkqK7HKaJES2DGdjuI5BjnWz3YYIsiE';
@@ -343,7 +425,44 @@ async function loadStages() {
   }
 }
 
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str == null ? '' : String(str);
+  return div.innerHTML;
+}
+
+async function loadSites() {
+  const container = document.getElementById('site-list');
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/sites?select=*&order=name.asc`, { headers });
+    if (!res.ok) throw new Error('fetch failed');
+    const sites = await res.json();
+
+    if (!sites.length) {
+      container.innerHTML = '<p class="sidebar-empty">No case studies yet — Ma\'alia will be the first.</p>';
+      return;
+    }
+
+    container.innerHTML = '';
+    sites.forEach(s => {
+      const a = document.createElement('a');
+      a.className = 'site-link';
+      a.href = `site.html?site=${encodeURIComponent(s.site_id)}`;
+      const region = [s.region, s.country].filter(Boolean).join(', ');
+      a.innerHTML = `
+        <div class="site-name">${escapeHtml(s.name)}</div>
+        ${region ? `<div class="site-region">${escapeHtml(region)}</div>` : ''}
+      `;
+      container.appendChild(a);
+    });
+  } catch (e) {
+    container.innerHTML = '<p class="sidebar-error">Could not load case studies.</p>';
+    console.error(e);
+  }
+}
+
 loadStages();
+loadSites();
 </script>
 
 </body>
