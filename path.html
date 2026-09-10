@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heritage Readiness Model — Path</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --stone: #EDE8DC; --stone-dim: #E1DACB; --ink: #23261F; --ink-soft: #4A4E42;
+    --olive: #6B7A5E; --olive-deep: #4F5C45; --clay: #A8623D; --slate: #3D5A6C;
+    --gold: #B8933A; --alert: #A13D2E; --line: rgba(35,38,31,0.14);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--stone); color: var(--ink); font-family: 'IBM Plex Sans', sans-serif; line-height: 1.55; font-size: 17px; }
+  h1, h2, h3, .display { font-family: 'Fraunces', serif; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
+  code, .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: var(--slate); }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 28px; }
+
+  .topnav { background: var(--ink); color: var(--stone); padding: 18px 0; }
+  .topnav .wrap { display: flex; justify-content: space-between; align-items: center; }
+  .topnav a.back { color: var(--gold); font-size: 0.9rem; text-decoration: none; }
+  .topnav a.back:hover { text-decoration: underline; }
+  .topnav .brand { font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; color: #C9C3B2; }
+
+  /* ---------- Path tab switcher ---------- */
+  .tabbar { background: #201E17; }
+  .tabbar .wrap { display: flex; gap: 2px; }
+  .tab {
+    padding: 14px 20px; font-size: 0.88rem; color: #A29C8C; text-decoration: none;
+    border-bottom: 3px solid transparent; font-family: 'IBM Plex Mono', monospace;
+  }
+  .tab.active { color: var(--stone); border-bottom-color: var(--gold); background: rgba(255,255,255,0.03); }
+  .tab .tab-pct { margin-left: 6px; opacity: 0.7; }
+
+  .hero { background: var(--ink); color: var(--stone); padding: 44px 0 40px; }
+  .hero .path-label { font-family: 'IBM Plex Mono', monospace; color: var(--gold); font-size: 0.85rem; }
+  .hero h1 { font-size: clamp(1.7rem, 3.6vw, 2.4rem); color: var(--stone); margin: 8px 0 4px; }
+  .hero .sitename { color: #C9C3B2; font-size: 1rem; margin-bottom: 22px; }
+  .hero-stats { display: flex; gap: 36px; align-items: flex-end; flex-wrap: wrap; }
+  .hero-pct { font-family: 'Fraunces', serif; font-size: 3.4rem; font-weight: 500; line-height: 1; }
+  .hero-status-badge { font-size: 0.9rem; font-family: 'IBM Plex Mono', monospace; padding: 6px 16px; border-radius: 3px; }
+
+  .status-ready { background: rgba(107,122,94,0.22); color: #B7C6A9; }
+  .status-needs_evidence { background: rgba(184,147,58,0.25); color: #E3C572; }
+  .status-major_gap { background: rgba(168,98,61,0.25); color: #E0A480; }
+  .status-critical_gap { background: rgba(161,61,46,0.25); color: #F0958A; }
+  .status-not_started { background: rgba(255,255,255,0.08); color: #C9C3B2; }
+
+  /* ---------- Gatekeeper alert ---------- */
+  .gatekeeper-alert {
+    background: var(--alert); color: #fff; padding: 16px 0;
+  }
+  .gatekeeper-alert .wrap { display: flex; align-items: center; gap: 12px; }
+  .gatekeeper-alert .icon { font-size: 1.3rem; }
+  .gatekeeper-alert strong { font-weight: 600; }
+  .gatekeeper-alert p { margin: 2px 0 0; font-size: 0.9rem; opacity: 0.92; }
+
+  section { padding: 52px 0; }
+  section.alt { background: var(--stone-dim); }
+  h2.section-title { font-size: clamp(1.4rem, 2.6vw, 1.85rem); margin: 0 0 10px; }
+  p.kicker { font-size: 0.94rem; color: var(--ink-soft); max-width: 66ch; margin: 0 0 30px; }
+
+  /* ---------- Criteria list ---------- */
+  .satisfaction-note {
+    display: inline-block; font-size: 0.82rem; font-family: 'IBM Plex Mono', monospace;
+    padding: 4px 12px; border-radius: 3px; background: rgba(61,90,108,0.12); color: var(--slate); margin-bottom: 22px;
+  }
+  .criterion-row {
+    display: flex; gap: 14px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--line);
+  }
+  .criterion-row:last-child { border-bottom: none; }
+  .criterion-code {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; font-weight: 600;
+    background: #fff; border: 1px solid var(--line); border-radius: 3px; padding: 3px 9px; flex-shrink: 0;
+  }
+  .criterion-row.claimed .criterion-code { background: var(--olive); color: #fff; border-color: var(--olive); }
+  .criterion-desc { font-size: 0.92rem; color: var(--ink-soft); }
+  .criterion-justification { font-size: 0.88rem; color: var(--ink); margin-top: 4px; font-style: italic; }
+
+  /* ---------- Stage blocks (shared style with site.html) ---------- */
+  .stage-block { margin-bottom: 40px; }
+  .stage-block h3 { font-size: 1.2rem; margin: 0 0 6px; }
+  .stage-block .stage-desc { font-size: 0.9rem; color: var(--ink-soft); margin-bottom: 16px; max-width: 66ch; }
+  .qa-row { border-bottom: 1px solid var(--line); padding: 14px 0; }
+  .qa-row:last-child { border-bottom: none; }
+  .qa-prompt { font-size: 0.94rem; font-weight: 500; margin-bottom: 4px; }
+  .qa-answer { font-size: 0.94rem; color: var(--ink-soft); }
+  .qa-empty { font-size: 0.9rem; color: var(--ink-soft); font-style: italic; }
+  .qa-status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; }
+
+  /* ---------- Comparators ---------- */
+  .comparator-list { display: flex; flex-direction: column; gap: 10px; }
+  .comparator-row {
+    background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 14px 16px;
+  }
+  .comparator-row .name { font-weight: 500; font-size: 0.95rem; }
+  .comparator-row .lesson { font-size: 0.86rem; color: var(--ink-soft); margin-top: 4px; }
+  .comparator-row .notes { font-size: 0.86rem; color: var(--ink); margin-top: 6px; font-style: italic; border-left: 2px solid var(--olive); padding-left: 10px; }
+
+  /* ---------- Feedback ---------- */
+  .feedback-box {
+    background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--gold);
+    border-radius: 4px; padding: 22px 24px;
+  }
+  .feedback-box .generated { font-size: 0.8rem; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; margin-bottom: 10px; }
+  .feedback-box .text { font-size: 0.96rem; }
+  .next-actions { margin-top: 16px; padding-left: 20px; }
+  .next-actions li { font-size: 0.92rem; margin-bottom: 6px; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--ink-soft); }
+  .empty-state h2 { color: var(--ink); }
+
+  footer { padding: 44px 0 60px; color: var(--ink-soft); font-size: 0.88rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  footer a { color: var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <div class="wrap">
+    <a class="back" href="index.html">← All Case Studies</a>
+    <span class="brand">HERITAGE READINESS MODEL</span>
+  </div>
+</div>
+
+<div id="app">
+  <div class="empty-state wrap"><p class="mono">Loading path data…</p></div>
+</div>
+
+<footer>
+  <div class="wrap" style="display:flex; justify-content:space-between; width:100%; flex-wrap:wrap; gap:10px;">
+    <span class="mono">v0.1.0</span>
+    <a href="https://github.com/minteha/heritage-readiness-model" class="mono">github.com/minteha/heritage-readiness-model</a>
+  </div>
+</footer>
+
+<script>
+const SUPABASE_URL = 'https://dntqhsrxbmhdbfyqnimk.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRudHFoc3J4Ym1oZGJmeXFuaW1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTk1NTIsImV4cCI6MjEwNDQ3NTU1Mn0.SyxoJflfFLX3UkqK7HKaJES2DGdjuI5BjnWz3YYIsiE';
+const headers = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
+
+const STATUS_LABEL = { ready: 'Ready', needs_evidence: 'Needs Evidence', major_gap: 'Major Gap', critical_gap: 'Critical Gap', not_started: 'Not Started' };
+const PATH_TRACK = { wh: 'world_heritage', ich_representative: 'ich', ich_urgent: 'ich' };
+
+function getParam(name) { return new URLSearchParams(window.location.search).get(name); }
+
+async function api(path) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers });
+  if (!res.ok) throw new Error(`Fetch failed: ${path}`);
+  return res.json();
+}
+
+function renderEmpty(message) {
+  document.getElementById('app').innerHTML = `
+    <div class="empty-state wrap">
+      <h2>${message}</h2>
+      <p><a href="index.html">← Back to all case studies</a></p>
+    </div>`;
+}
+
+async function renderPath() {
+  const siteId = getParam('site');
+  const pathId = getParam('path');
+  if (!siteId || !pathId) { renderEmpty('No site or path selected.'); return; }
+
+  let site;
+  try {
+    const sites = await api(`sites?site_id=eq.${siteId}&select=*`);
+    if (!sites.length) { renderEmpty('Site not found.'); return; }
+    site = sites[0];
+  } catch (e) {
+    renderEmpty('Could not load site data. Check the database connection.');
+    console.error(e);
+    return;
+  }
+
+  const [allPaths, thisPath] = await Promise.all([
+    api(`site_path_comparison?site_id=eq.${siteId}&select=*`),
+    api(`site_path_comparison?site_id=eq.${siteId}&criteria_list_id=eq.${pathId}&select=*`)
+  ]);
+
+  if (!thisPath.length) { renderEmpty('Path not found for this site.'); return; }
+  const pathInfo = thisPath[0];
+  const trackId = pathInfo.track_id;
+
+  document.title = `${site.name} — ${pathInfo.path_name} — Heritage Readiness Model`;
+
+  const [stages, allCriteria, claimedCriteria, assessmentAnswers, comparisons, allCaseStudies, feedback] = await Promise.all([
+    api(`stages?scope=eq.path&order=stage_number.asc`),
+    api(`criteria?list_id=eq.${pathId}&order=sort_order.asc`),
+    api(`assessment_criteria?assessment_id=eq.${pathInfo.assessment_id}&select=*`),
+    api(`assessment_answers?assessment_id=eq.${pathInfo.assessment_id}&select=*,assessment_questions(prompt,stage_number,question_type),evidence_records(description,source_citation)`),
+    api(`assessment_comparisons?assessment_id=eq.${pathInfo.assessment_id}&select=*,case_studies(name,key_lesson)`),
+    api(`case_studies?track_id=eq.${trackId}&select=*`),
+    api(`assessment_feedback?assessment_id=eq.${pathInfo.assessment_id}&is_current=eq.true&select=*`)
+  ]);
+
+  // ---- Tab switcher ----
+  const pathOrder = ['wh', 'ich_representative', 'ich_urgent'];
+  const tabsHtml = pathOrder.map(id => {
+    const p = allPaths.find(x => x.criteria_list_id === id);
+    if (!p) return '';
+    const active = id === pathId;
+    return `<a class="tab ${active ? 'active' : ''}" href="path.html?site=${siteId}&path=${id}">
+      ${p.path_name.split('(')[0].trim()}<span class="tab-pct">${p.coverage_pct}%</span>
+    </a>`;
+  }).join('');
+
+  // ---- Stages applicable to this track ----
+  const applicableStages = stages.filter(st => st.track_applicability === 'both' || st.track_applicability === trackId);
+
+  const claimedIds = new Set(claimedCriteria.map(c => c.criterion_id));
+  const criteriaHtml = allCriteria.map(c => {
+    const claim = claimedCriteria.find(cc => cc.criterion_id === c.criterion_id);
+    return `
+      <div class="criterion-row ${claim ? 'claimed' : ''}">
+        <span class="criterion-code">${c.code}</span>
+        <div>
+          <div class="criterion-desc">${c.description}</div>
+          ${claim && claim.justification ? `<div class="criterion-justification">${claim.justification}</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  const answersByStage = {};
+  assessmentAnswers.forEach(a => {
+    const sn = a.assessment_questions.stage_number;
+    (answersByStage[sn] = answersByStage[sn] || []).push(a);
+  });
+
+  const statusColor = s => ({ ready: 'var(--olive)', needs_evidence: 'var(--gold)', major_gap: 'var(--clay)', critical_gap: 'var(--alert)' }[s] || 'var(--line)');
+
+  const stagesHtml = applicableStages.filter(st => st.stage_number !== 3).map(st => {
+    const answers = answersByStage[st.stage_number] || [];
+    const rows = answers.length
+      ? answers.map(a => `
+          <div class="qa-row">
+            <div class="qa-prompt"><span class="qa-status-dot" style="background:${statusColor(a.status)}"></span>${a.assessment_questions.prompt}</div>
+            <div class="qa-answer">${(a.answer_value && a.answer_value.value) ? a.answer_value.value : JSON.stringify(a.answer_value)}</div>
+            ${a.evidence_records && a.evidence_records.length ? `<div class="qa-answer mono" style="margin-top:4px; font-size:0.82rem;">Evidence: ${a.evidence_records.map(e => e.source_citation || e.description).join('; ')}</div>` : ''}
+          </div>`).join('')
+      : `<p class="qa-empty">Not yet assessed.</p>`;
+    return `<div class="stage-block"><h3>${st.name}</h3><p class="stage-desc">${st.description}</p>${rows}</div>`;
+  }).join('');
+
+  // ---- Comparative analysis: recorded comparisons, or the reference list if none yet ----
+  const comparisonHtml = comparisons.length
+    ? `<div class="comparator-list">${comparisons.map(c => `
+        <div class="comparator-row">
+          <div class="name">${c.case_studies.name}</div>
+          <div class="lesson">${c.case_studies.key_lesson}</div>
+          ${c.comparison_notes ? `<div class="notes">${c.comparison_notes}</div>` : ''}
+        </div>`).join('')}</div>`
+    : `<p class="qa-empty" style="margin-bottom:16px;">No comparison recorded yet for this path. Reference comparators for this track:</p>
+       <div class="comparator-list">${allCaseStudies.map(c => `
+        <div class="comparator-row">
+          <div class="name">${c.name}</div>
+          <div class="lesson">${c.key_lesson}</div>
+        </div>`).join('')}</div>`;
+
+  // ---- Feedback ----
+  const feedbackHtml = feedback.length
+    ? `<div class="feedback-box">
+        <div class="generated">Generated ${new Date(feedback[0].generated_at).toLocaleDateString()}</div>
+        <div class="text">${feedback[0].feedback_text}</div>
+        ${feedback[0].next_actions && feedback[0].next_actions.length ? `<ul class="next-actions">${feedback[0].next_actions.map(a => `<li>${a}</li>`).join('')}</ul>` : ''}
+      </div>`
+    : `<p class="qa-empty">No feedback generated yet for this path. Feedback is written once new evidence has been reviewed and approved.</p>`;
+
+  const gatekeeperAlert = pathInfo.failed_gatekeepers > 0 ? `
+    <div class="gatekeeper-alert">
+      <div class="wrap">
+        <span class="icon">⚠</span>
+        <div>
+          <strong>${pathInfo.failed_gatekeepers} gatekeeper requirement${pathInfo.failed_gatekeepers > 1 ? 's' : ''} not met.</strong>
+          <p>This path cannot be marked Ready regardless of coverage elsewhere — a gatekeeper failure is decisive on its own.</p>
+        </div>
+      </div>
+    </div>` : '';
+
+  document.getElementById('app').innerHTML = `
+    <div class="tabbar"><div class="wrap">${tabsHtml}</div></div>
+    <div class="hero">
+      <div class="wrap">
+        <span class="path-label">${trackId === 'world_heritage' ? '1972 CONVENTION' : '2003 CONVENTION'} · ${pathInfo.satisfaction_rule === 'all_required' ? 'ALL CRITERIA REQUIRED' : 'AT LEAST ONE CRITERION'}</span>
+        <h1>${pathInfo.path_name}</h1>
+        <div class="sitename">${site.name}</div>
+        <div class="hero-stats">
+          <div class="hero-pct">${pathInfo.coverage_pct}%</div>
+          <span class="hero-status-badge status-${pathInfo.overall_status}">${STATUS_LABEL[pathInfo.overall_status] || pathInfo.overall_status}</span>
+        </div>
+      </div>
+    </div>
+    ${gatekeeperAlert}
+
+    <section>
+      <div class="wrap">
+        <h2 class="section-title">Criteria</h2>
+        <span class="satisfaction-note">${pathInfo.satisfaction_rule === 'all_required' ? 'Every criterion below must be satisfied — no partial credit' : 'At least one criterion below must be satisfied'}</span>
+        ${criteriaHtml}
+      </div>
+    </section>
+
+    <section class="alt">
+      <div class="wrap">
+        <h2 class="section-title">Assessment</h2>
+        <p class="kicker">Path-specific evidence for ${pathInfo.path_name.split('(')[0].trim()}.</p>
+        ${stagesHtml}
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2 class="section-title">Comparative analysis</h2>
+        ${comparisonHtml}
+      </div>
+    </section>
+
+    <section class="alt">
+      <div class="wrap">
+        <h2 class="section-title">What to do next</h2>
+        ${feedbackHtml}
+      </div>
+    </section>
+  `;
+}
+
+renderPath().catch(e => { console.error(e); renderEmpty('Something went wrong loading this path.'); });
+</script>
+
+</body>
+</html>
