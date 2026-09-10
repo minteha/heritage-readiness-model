@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heritage Readiness Model — Site</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --stone: #EDE8DC;
+    --stone-dim: #E1DACB;
+    --ink: #23261F;
+    --ink-soft: #4A4E42;
+    --olive: #6B7A5E;
+    --olive-deep: #4F5C45;
+    --clay: #A8623D;
+    --slate: #3D5A6C;
+    --gold: #B8933A;
+    --alert: #A13D2E;
+    --line: rgba(35,38,31,0.14);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--stone);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    line-height: 1.55;
+    font-size: 17px;
+  }
+  h1, h2, h3, .display { font-family: 'Fraunces', serif; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
+  code, .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: var(--slate); }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 28px; }
+
+  /* ---------- Top nav ---------- */
+  .topnav {
+    background: var(--ink);
+    color: var(--stone);
+    padding: 18px 0;
+  }
+  .topnav .wrap { display: flex; justify-content: space-between; align-items: center; }
+  .topnav a.back { color: var(--gold); font-size: 0.9rem; text-decoration: none; }
+  .topnav a.back:hover { text-decoration: underline; }
+  .topnav .brand { font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; color: #C9C3B2; }
+
+  /* ---------- Hero ---------- */
+  .hero { background: var(--ink); color: var(--stone); padding: 40px 0 56px; }
+  .hero h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); color: var(--stone); margin: 6px 0 10px; }
+  .hero .meta { font-size: 0.95rem; color: #C9C3B2; }
+  .hero .desc { max-width: 68ch; color: #D8D3C4; margin-top: 14px; font-size: 1.02rem; }
+
+  section { padding: 56px 0; }
+  section.alt { background: var(--stone-dim); }
+  h2.section-title { font-size: clamp(1.4rem, 2.6vw, 1.85rem); margin: 0 0 10px; }
+  p.kicker { font-size: 0.94rem; color: var(--ink-soft); max-width: 66ch; margin: 0 0 32px; }
+
+  /* ---------- Path summary cards ---------- */
+  .paths { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .path-card {
+    background: #fff; border: 1px solid var(--line); border-radius: 4px;
+    padding: 24px; display: flex; flex-direction: column; gap: 10px;
+    text-decoration: none; color: var(--ink); position: relative;
+    border-top: 5px solid var(--line);
+  }
+  .path-card:hover { box-shadow: 0 2px 10px rgba(35,38,31,0.08); }
+  .path-card.recommended { border-top-color: var(--gold); background: #FBF3E2; }
+  .path-card .label { font-size: 0.78rem; font-family: 'IBM Plex Mono', monospace; color: var(--ink-soft); }
+  .path-card h3 { font-size: 1.1rem; margin: 0; }
+  .path-card .pct { font-family: 'Fraunces', serif; font-size: 2.1rem; font-weight: 500; margin: 4px 0 0; }
+  .path-card .status-badge {
+    align-self: flex-start; font-size: 0.76rem; font-family: 'IBM Plex Mono', monospace;
+    padding: 3px 10px; border-radius: 3px; margin-top: 6px;
+  }
+  .status-ready { background: rgba(107,122,94,0.15); color: var(--olive-deep); }
+  .status-needs_evidence { background: rgba(184,147,58,0.18); color: #8A6B1E; }
+  .status-major_gap { background: rgba(168,98,61,0.18); color: var(--clay); }
+  .status-critical_gap { background: rgba(161,61,46,0.16); color: var(--alert); }
+  .status-not_started { background: rgba(35,38,31,0.08); color: var(--ink-soft); }
+  .recommended-tag {
+    position: absolute; top: -11px; right: 16px; background: var(--gold); color: var(--ink);
+    font-size: 0.72rem; font-family: 'IBM Plex Mono', monospace; padding: 3px 10px; border-radius: 3px;
+  }
+
+  /* ---------- Stage blocks ---------- */
+  .stage-block { margin-bottom: 40px; }
+  .stage-block h3 { font-size: 1.2rem; margin: 0 0 6px; }
+  .stage-block .stage-desc { font-size: 0.9rem; color: var(--ink-soft); margin-bottom: 16px; max-width: 66ch; }
+  .qa-row { border-bottom: 1px solid var(--line); padding: 14px 0; }
+  .qa-row:last-child { border-bottom: none; }
+  .qa-prompt { font-size: 0.94rem; font-weight: 500; margin-bottom: 4px; }
+  .qa-answer { font-size: 0.94rem; color: var(--ink-soft); }
+  .qa-empty { font-size: 0.9rem; color: var(--ink-soft); font-style: italic; }
+  .qa-status-dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px;
+  }
+
+  /* ---------- Components / threats lists ---------- */
+  .item-list { display: flex; flex-direction: column; gap: 10px; }
+  .item-row {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 12px 16px;
+  }
+  .item-row .name { font-weight: 500; font-size: 0.95rem; }
+  .item-row .sub { font-size: 0.83rem; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; }
+  .pill { font-size: 0.76rem; font-family: 'IBM Plex Mono', monospace; padding: 3px 10px; border-radius: 3px; }
+  .pill-good { background: rgba(107,122,94,0.15); color: var(--olive-deep); }
+  .pill-medium { background: rgba(184,147,58,0.18); color: #8A6B1E; }
+  .pill-at_risk { background: rgba(168,98,61,0.18); color: var(--clay); }
+  .pill-gone { background: rgba(161,61,46,0.16); color: var(--alert); }
+  .pill-ascertained { background: rgba(161,61,46,0.16); color: var(--alert); }
+  .pill-potential { background: rgba(184,147,58,0.18); color: #8A6B1E; }
+
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--ink-soft);
+  }
+  .empty-state h2 { color: var(--ink); }
+
+  footer { padding: 44px 0 60px; color: var(--ink-soft); font-size: 0.88rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  footer a { color: var(--ink-soft); }
+
+  @media (max-width: 760px) {
+    .paths { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <div class="wrap">
+    <a class="back" href="index.html">← All Case Studies</a>
+    <span class="brand">HERITAGE READINESS MODEL</span>
+  </div>
+</div>
+
+<div id="app">
+  <div class="empty-state wrap"><p class="mono">Loading site data…</p></div>
+</div>
+
+<footer>
+  <div class="wrap" style="display:flex; justify-content:space-between; width:100%; flex-wrap:wrap; gap:10px;">
+    <span class="mono">v0.1.0</span>
+    <a href="https://github.com/minteha/heritage-readiness-model" class="mono">github.com/minteha/heritage-readiness-model</a>
+  </div>
+</footer>
+
+<script>
+const SUPABASE_URL = 'https://dntqhsrxbmhdbfyqnimk.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRudHFoc3J4Ym1oZGJmeXFuaW1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTk1NTIsImV4cCI6MjEwNDQ3NTU1Mn0.SyxoJflfFLX3UkqK7HKaJES2DGdjuI5BjnWz3YYIsiE';
+const headers = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
+
+const STATUS_LABEL = {
+  ready: 'Ready', needs_evidence: 'Needs Evidence', major_gap: 'Major Gap',
+  critical_gap: 'Critical Gap', not_started: 'Not Started'
+};
+
+function getParam(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
+
+async function api(path) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers });
+  if (!res.ok) throw new Error(`Fetch failed: ${path}`);
+  return res.json();
+}
+
+function renderEmpty(message) {
+  document.getElementById('app').innerHTML = `
+    <div class="empty-state wrap">
+      <h2>${message}</h2>
+      <p><a href="index.html">← Back to all case studies</a></p>
+    </div>`;
+}
+
+async function renderSite() {
+  const siteId = getParam('site');
+  if (!siteId) {
+    renderEmpty('No site selected.');
+    return;
+  }
+
+  let site;
+  try {
+    const sites = await api(`sites?site_id=eq.${siteId}&select=*`);
+    if (!sites.length) { renderEmpty('Site not found.'); return; }
+    site = sites[0];
+  } catch (e) {
+    renderEmpty('Could not load site data. Check the database connection.');
+    console.error(e);
+    return;
+  }
+
+  document.title = `${site.name} — Heritage Readiness Model`;
+
+  const [pathComparison, stages, siteAnswers, components, threats, mapFeatures] = await Promise.all([
+    api(`site_path_comparison?site_id=eq.${siteId}&select=*`),
+    api(`stages?scope=eq.site&order=stage_number.asc`),
+    api(`site_answers?site_id=eq.${siteId}&select=*,assessment_questions(prompt,stage_number,question_type),evidence_records(description,source_citation)`),
+    api(`site_components?site_id=eq.${siteId}&select=*`),
+    api(`threats?site_id=eq.${siteId}&select=*`),
+    api(`map_features?site_id=eq.${siteId}&select=*`)
+  ]);
+
+  const pathOrder = ['wh', 'ich_representative', 'ich_urgent'];
+  const sortedPaths = pathOrder.map(id => pathComparison.find(p => p.criteria_list_id === id)).filter(Boolean);
+  const pathCardsHtml = sortedPaths.map(p => `
+    <a class="path-card ${p.is_recommended ? 'recommended' : ''}" href="path.html?site=${siteId}&path=${p.criteria_list_id}">
+      ${p.is_recommended ? '<span class="recommended-tag">RECOMMENDED</span>' : ''}
+      <span class="label">${p.track_id === 'world_heritage' ? '1972 CONVENTION' : '2003 CONVENTION'}</span>
+      <h3>${p.path_name.split('(')[0].trim()}</h3>
+      <div class="pct">${p.coverage_pct}%</div>
+      <span class="status-badge status-${p.overall_status}">${STATUS_LABEL[p.overall_status] || p.overall_status}</span>
+    </a>
+  `).join('');
+
+  const answersByStage = {};
+  siteAnswers.forEach(a => {
+    const sn = a.assessment_questions.stage_number;
+    (answersByStage[sn] = answersByStage[sn] || []).push(a);
+  });
+
+  const statusColor = s => ({
+    ready: 'var(--olive)', needs_evidence: 'var(--gold)',
+    major_gap: 'var(--clay)', critical_gap: 'var(--alert)'
+  }[s] || 'var(--line)');
+
+  const stagesHtml = stages.map(st => {
+    const answers = answersByStage[st.stage_number] || [];
+    const rows = answers.length
+      ? answers.map(a => `
+          <div class="qa-row">
+            <div class="qa-prompt"><span class="qa-status-dot" style="background:${statusColor(a.status)}"></span>${a.assessment_questions.prompt}</div>
+            <div class="qa-answer">${(a.answer_value && a.answer_value.value) ? a.answer_value.value : JSON.stringify(a.answer_value)}</div>
+            ${a.evidence_records && a.evidence_records.length ? `<div class="qa-answer mono" style="margin-top:4px; font-size:0.82rem;">Evidence: ${a.evidence_records.map(e => e.source_citation || e.description).join('; ')}</div>` : ''}
+          </div>`).join('')
+      : `<p class="qa-empty">Not yet assessed.</p>`;
+    return `
+      <div class="stage-block">
+        <h3>${st.name}</h3>
+        <p class="stage-desc">${st.description}</p>
+        ${rows}
+      </div>`;
+  }).join('');
+
+  const componentsHtml = components.length
+    ? `<div class="item-list">${components.map(c => `
+        <div class="item-row">
+          <div><div class="name">${c.component_name || c.component_type}</div><div class="sub">${c.component_type}</div></div>
+          <span class="pill pill-${c.status}">${c.status.replace('_',' ')}</span>
+        </div>`).join('')}</div>`
+    : `<p class="qa-empty">No components recorded yet.</p>`;
+
+  const threatsHtml = threats.length
+    ? `<div class="item-list">${threats.map(t => `
+        <div class="item-row">
+          <div><div class="name">${t.threat_name}</div><div class="sub">Probability ${t.probability ?? '—'} · Severity ${t.severity ?? '—'}${t.value_at_risk ? ' · ' + t.value_at_risk : ''}</div></div>
+          <span class="pill pill-${t.danger_tier}">${t.danger_tier}</span>
+        </div>`).join('')}</div>`
+    : `<p class="qa-empty">No threats recorded yet.</p>`;
+
+  const mapHtml = mapFeatures.length
+    ? `<div class="item-list">${mapFeatures.map(f => `
+        <div class="item-row">
+          <div><div class="name">${f.name || f.feature_type}</div><div class="sub">${f.feature_type} · ${f.geometry_type}</div></div>
+        </div>`).join('')}</div>`
+    : `<p class="qa-empty">No boundaries or features mapped yet.</p>`;
+
+  document.getElementById('app').innerHTML = `
+    <div class="hero">
+      <div class="wrap">
+        <span class="mono" style="color:var(--gold); font-size:0.82rem;">CASE STUDY</span>
+        <h1>${site.name}</h1>
+        <div class="meta">${[site.region, site.country].filter(Boolean).join(', ')}</div>
+        ${site.description ? `<p class="desc">${site.description}</p>` : ''}
+      </div>
+    </div>
+
+    <section>
+      <div class="wrap">
+        <h2 class="section-title">Which path fits best?</h2>
+        <p class="kicker">Coverage shows how much of each path's question bank has evidence so far. Status is the actual verdict — a single failed gatekeeper (e.g. missing community consent) overrides coverage entirely, so the highest percentage is not always the recommended path.</p>
+        <div class="paths">${pathCardsHtml}</div>
+      </div>
+    </section>
+
+    <section class="alt">
+      <div class="wrap">
+        <h2 class="section-title">Site record</h2>
+        <p class="kicker">Facts about the place itself — shared by all three paths above, recorded once.</p>
+        ${stagesHtml}
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2 class="section-title">Conservation status by component</h2>
+        ${componentsHtml}
+      </div>
+    </section>
+
+    <section class="alt">
+      <div class="wrap">
+        <h2 class="section-title">Threats</h2>
+        ${threatsHtml}
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2 class="section-title">Boundaries &amp; features</h2>
+        <p class="kicker">Listed for now; an interactive map view is a planned addition.</p>
+        ${mapHtml}
+      </div>
+    </section>
+  `;
+}
+
+renderSite().catch(e => { console.error(e); renderEmpty('Something went wrong loading this site.'); });
+</script>
+
+</body>
+</html>
