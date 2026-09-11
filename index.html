@@ -135,7 +135,28 @@
   .path-card.wh .gate { color: var(--slate); }
   .path-card.ich-rep .gate { color: var(--olive-deep); }
   .path-card.ich-urgent .gate { color: #8A6B1E; }
+  .path-card.wh .path-example a { color: var(--slate); }
+  .path-card.ich-rep .path-example a { color: var(--olive-deep); }
+  .path-card.ich-urgent .path-example a { color: #8A6B1E; }
   .path-card p.desc { font-size: 0.96rem; color: var(--ink-soft); margin: 0; flex-grow: 1; }
+  .path-example {
+    font-size: 0.85rem;
+    padding-top: 10px;
+    margin-top: 4px;
+    border-top: 1px dashed var(--line);
+  }
+  .path-example .example-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    display: block;
+    margin-bottom: 2px;
+  }
+  .path-example a {
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .path-example a:hover { text-decoration: underline; }
   .scope-note {
     margin-top: 26px;
     font-size: 0.94rem;
@@ -331,18 +352,30 @@
         <h3>World Heritage</h3>
         <p class="desc">Site- or landscape-based. Judged against ten criteria covering culture, history, and land use.</p>
         <div class="gate">Satisfy at least ONE of 10 criteria</div>
+        <div class="path-example">
+          <span class="example-label">REAL EXAMPLE</span>
+          <a href="https://whc.unesco.org/en/list/1809/" target="_blank" rel="noopener">Sebastia</a> — inscribed via the emergency procedure and placed on the Danger List simultaneously (2026), citing regional conflict.
+        </div>
       </div>
       <div class="path-card ich-rep">
         <span class="label">2003 CONVENTION</span>
         <h3>ICH — Representative List</h3>
         <p class="desc">Community-centered. Knowledge, skills, and practices — not the physical site itself.</p>
         <div class="gate">Satisfy ALL 5 of R.1–R.5</div>
+        <div class="path-example">
+          <span class="example-label">REAL EXAMPLE</span>
+          <a href="https://ich.unesco.org/en/RL/al-mihrass-tree-knowledge-skills-and-rituals-associated-with-it-02276" target="_blank" rel="noopener">Al-Mihrass</a> (Jordan, 2025) — the olive-tree listing that this whole project began from.
+        </div>
       </div>
       <div class="path-card ich-urgent">
         <span class="label">2003 CONVENTION</span>
         <h3>ICH — Urgent Safeguarding</h3>
         <p class="desc">Same community basis, but the practice must be demonstrably at risk of disappearing.</p>
         <div class="gate">Satisfy ALL 6 of U.1–U.6</div>
+        <div class="path-example">
+          <span class="example-label">REAL EXAMPLE</span>
+          <a href="https://ich.unesco.org/en/USL/traditional-knowledge-methods-and-practices-concerning-olive-cultivation-01983" target="_blank" rel="noopener">Turkish olive cultivation</a> (2023) — inscribed because the traditional grafting/milling knowledge was endangered, even as production itself stayed viable.
+        </div>
       </div>
     </div>
     <p class="scope-note">This model deliberately covers only these three routes. UNESCO Biosphere Reserves (Man and the Biosphere Programme) and the FAO's GIAHS designation are adjacent, genuinely relevant mechanisms — left out by choice, not oversight, because they don't follow this same individual, criteria-based nomination structure.</p>
