@@ -118,6 +118,23 @@
   }
   .empty-state h2 { color: var(--ink); }
 
+  /* ---------- Evidence tier tags ---------- */
+  .evidence-list { margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .evidence-item { font-size: 0.85rem; color: var(--ink-soft); }
+  .tier-tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 3px;
+    margin-right: 8px;
+    letter-spacing: 0.02em;
+  }
+  .tier-verified { background: rgba(107,122,94,0.18); color: var(--olive-deep); }
+  .tier-lead { background: rgba(184,147,58,0.2); color: #8A6B1E; }
+  .lead-row { border-left: 3px solid var(--gold); }
+
   footer { padding: 44px 0 60px; color: var(--ink-soft); font-size: 0.88rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
   footer a { color: var(--ink-soft); }
 
@@ -197,12 +214,13 @@ async function renderSite() {
   const [pathComparison, stages, siteAnswers, components, threats, mapFeatures] = await Promise.all([
     api(`site_path_comparison?site_id=eq.${siteId}&select=*`),
     api(`stages?scope=eq.site&order=stage_number.asc`),
-    api(`site_answers?site_id=eq.${siteId}&select=*,assessment_questions(prompt,stage_number,question_type),evidence_records(description,source_citation)`),
+    api(`site_answers?site_id=eq.${siteId}&select=*,assessment_questions(prompt,stage_number,question_type),evidence_records(description,source_citation,verification_tier)`),
     api(`site_components?site_id=eq.${siteId}&select=*`),
     api(`threats?site_id=eq.${siteId}&select=*`),
     api(`map_features?site_id=eq.${siteId}&select=*`)
   ]);
 
+  // ---- Path summary cards ----
   const pathOrder = ['wh', 'ich_representative', 'ich_urgent'];
   const sortedPaths = pathOrder.map(id => pathComparison.find(p => p.criteria_list_id === id)).filter(Boolean);
   const pathCardsHtml = sortedPaths.map(p => `
@@ -215,6 +233,7 @@ async function renderSite() {
     </a>
   `).join('');
 
+  // ---- Site-level stage Q&A, grouped ----
   const answersByStage = {};
   siteAnswers.forEach(a => {
     const sn = a.assessment_questions.stage_number;
@@ -226,6 +245,17 @@ async function renderSite() {
     major_gap: 'var(--clay)', critical_gap: 'var(--alert)'
   }[s] || 'var(--line)');
 
+  // Renders one evidence item with its tier badge -- VERIFIED (olive) or
+  // LEAD (gold). A lead is a real, useful pointer (e.g. a newspaper
+  // mention) that just hasn't been confirmed firsthand yet; it's shown
+  // inline like this, but never counted toward marking an answer Ready
+  // (that rule is enforced in the database itself, not just visually here).
+  const renderEvidenceItem = e => `
+    <span class="evidence-item">
+      <span class="tier-tag tier-${e.verification_tier}">${e.verification_tier === 'verified' ? 'VERIFIED' : 'LEAD'}</span>
+      ${e.source_citation || e.description}
+    </span>`;
+
   const stagesHtml = stages.map(st => {
     const answers = answersByStage[st.stage_number] || [];
     const rows = answers.length
@@ -233,7 +263,7 @@ async function renderSite() {
           <div class="qa-row">
             <div class="qa-prompt"><span class="qa-status-dot" style="background:${statusColor(a.status)}"></span>${a.assessment_questions.prompt}</div>
             <div class="qa-answer">${(a.answer_value && a.answer_value.value) ? a.answer_value.value : JSON.stringify(a.answer_value)}</div>
-            ${a.evidence_records && a.evidence_records.length ? `<div class="qa-answer mono" style="margin-top:4px; font-size:0.82rem;">Evidence: ${a.evidence_records.map(e => e.source_citation || e.description).join('; ')}</div>` : ''}
+            ${a.evidence_records && a.evidence_records.length ? `<div class="evidence-list">${a.evidence_records.map(renderEvidenceItem).join('')}</div>` : ''}
           </div>`).join('')
       : `<p class="qa-empty">Not yet assessed.</p>`;
     return `
@@ -244,6 +274,30 @@ async function renderSite() {
       </div>`;
   }).join('');
 
+  // ---- Research Leads: every lead-tier piece of evidence across the
+  // whole site, gathered into one place so an unconfirmed newspaper
+  // mention or informal tip never just gets lost inside a stage block --
+  // it's a visible to-do, not buried evidence.
+  const allLeads = [];
+  siteAnswers.forEach(a => {
+    (a.evidence_records || []).forEach(e => {
+      if (e.verification_tier === 'lead') {
+        allLeads.push({ prompt: a.assessment_questions.prompt, ...e });
+      }
+    });
+  });
+  const leadsHtml = allLeads.length
+    ? `<div class="item-list">${allLeads.map(l => `
+        <div class="item-row lead-row">
+          <div>
+            <div class="name">${l.source_citation || l.description}</div>
+            <div class="sub">Relates to: ${l.prompt}</div>
+          </div>
+          <span class="tier-tag tier-lead">LEAD</span>
+        </div>`).join('')}</div>`
+    : `<p class="qa-empty">No open research leads right now.</p>`;
+
+  // ---- Components ----
   const componentsHtml = components.length
     ? `<div class="item-list">${components.map(c => `
         <div class="item-row">
@@ -252,6 +306,7 @@ async function renderSite() {
         </div>`).join('')}</div>`
     : `<p class="qa-empty">No components recorded yet.</p>`;
 
+  // ---- Threats ----
   const threatsHtml = threats.length
     ? `<div class="item-list">${threats.map(t => `
         <div class="item-row">
@@ -260,6 +315,7 @@ async function renderSite() {
         </div>`).join('')}</div>`
     : `<p class="qa-empty">No threats recorded yet.</p>`;
 
+  // ---- Map features (list form for now; full map view is a later build) ----
   const mapHtml = mapFeatures.length
     ? `<div class="item-list">${mapFeatures.map(f => `
         <div class="item-row">
@@ -282,6 +338,14 @@ async function renderSite() {
         <h2 class="section-title">Which path fits best?</h2>
         <p class="kicker">Coverage shows how much of each path's question bank has evidence so far. Status is the actual verdict — a single failed gatekeeper (e.g. missing community consent) overrides coverage entirely, so the highest percentage is not always the recommended path.</p>
         <div class="paths">${pathCardsHtml}</div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2 class="section-title">Research leads</h2>
+        <p class="kicker">Real leads worth following up — a newspaper mention, an informal tip — that haven't been confirmed firsthand yet. These can point research in the right direction, but can never on their own mark an answer Ready; that requires verified evidence.</p>
+        ${leadsHtml}
       </div>
     </section>
 

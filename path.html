@@ -112,6 +112,23 @@
   .next-actions li { font-size: 0.92rem; margin-bottom: 6px; }
 
   .empty-state { text-align: center; padding: 60px 20px; color: var(--ink-soft); }
+
+  /* ---------- Evidence tier tags ---------- */
+  .evidence-list { margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .evidence-item { font-size: 0.85rem; color: var(--ink-soft); }
+  .tier-tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 3px;
+    margin-right: 8px;
+    letter-spacing: 0.02em;
+  }
+  .tier-verified { background: rgba(107,122,94,0.18); color: var(--olive-deep); }
+  .tier-lead { background: rgba(184,147,58,0.2); color: #8A6B1E; }
+  .lead-row { border-left: 3px solid var(--gold); }
   .empty-state h2 { color: var(--ink); }
 
   footer { padding: 44px 0 60px; color: var(--ink-soft); font-size: 0.88rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
@@ -193,7 +210,7 @@ async function renderPath() {
     api(`stages?scope=eq.path&order=stage_number.asc`),
     api(`criteria?list_id=eq.${pathId}&order=sort_order.asc`),
     api(`assessment_criteria?assessment_id=eq.${pathInfo.assessment_id}&select=*`),
-    api(`assessment_answers?assessment_id=eq.${pathInfo.assessment_id}&select=*,assessment_questions(prompt,stage_number,question_type),evidence_records(description,source_citation)`),
+    api(`assessment_answers?assessment_id=eq.${pathInfo.assessment_id}&select=*,assessment_questions(prompt,stage_number,question_type),evidence_records(description,source_citation,verification_tier)`),
     api(`assessment_comparisons?assessment_id=eq.${pathInfo.assessment_id}&select=*,case_studies(name,key_lesson)`),
     api(`case_studies?track_id=eq.${trackId}&select=*`),
     api(`assessment_feedback?assessment_id=eq.${pathInfo.assessment_id}&is_current=eq.true&select=*`)
@@ -234,6 +251,12 @@ async function renderPath() {
 
   const statusColor = s => ({ ready: 'var(--olive)', needs_evidence: 'var(--gold)', major_gap: 'var(--clay)', critical_gap: 'var(--alert)' }[s] || 'var(--line)');
 
+  const renderEvidenceItem = e => `
+    <span class="evidence-item">
+      <span class="tier-tag tier-${e.verification_tier}">${e.verification_tier === 'verified' ? 'VERIFIED' : 'LEAD'}</span>
+      ${e.source_citation || e.description}
+    </span>`;
+
   const stagesHtml = applicableStages.filter(st => st.stage_number !== 3 && st.stage_number !== 7).map(st => {
     const answers = answersByStage[st.stage_number] || [];
     const rows = answers.length
@@ -241,11 +264,29 @@ async function renderPath() {
           <div class="qa-row">
             <div class="qa-prompt"><span class="qa-status-dot" style="background:${statusColor(a.status)}"></span>${a.assessment_questions.prompt}</div>
             <div class="qa-answer">${(a.answer_value && a.answer_value.value) ? a.answer_value.value : JSON.stringify(a.answer_value)}</div>
-            ${a.evidence_records && a.evidence_records.length ? `<div class="qa-answer mono" style="margin-top:4px; font-size:0.82rem;">Evidence: ${a.evidence_records.map(e => e.source_citation || e.description).join('; ')}</div>` : ''}
+            ${a.evidence_records && a.evidence_records.length ? `<div class="evidence-list">${a.evidence_records.map(renderEvidenceItem).join('')}</div>` : ''}
           </div>`).join('')
       : `<p class="qa-empty">Not yet assessed.</p>`;
     return `<div class="stage-block"><h3>${st.name}</h3><p class="stage-desc">${st.description}</p>${rows}</div>`;
   }).join('');
+
+  // ---- Research Leads: path-specific leads, gathered into one visible
+  // to-do list rather than left buried inside individual stage blocks.
+  const allLeads = [];
+  assessmentAnswers.forEach(a => {
+    (a.evidence_records || []).forEach(e => {
+      if (e.verification_tier === 'lead') {
+        allLeads.push({ prompt: a.assessment_questions.prompt, ...e });
+      }
+    });
+  });
+  const leadsHtml = allLeads.length
+    ? `<div class="comparator-list">${allLeads.map(l => `
+        <div class="comparator-row lead-row">
+          <div class="name">${l.source_citation || l.description}</div>
+          <div class="lesson">Relates to: ${l.prompt}</div>
+        </div>`).join('')}</div>`
+    : `<p class="qa-empty">No open research leads right now.</p>`;
 
   // ---- Comparative analysis: recorded comparisons, or the reference list if none yet ----
   const comparisonHtml = comparisons.length
@@ -324,6 +365,14 @@ async function renderPath() {
       <div class="wrap">
         <h2 class="section-title">What to do next</h2>
         ${feedbackHtml}
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2 class="section-title">Research leads</h2>
+        <p class="kicker">Real leads specific to this path — not yet confirmed firsthand, but worth following up. A lead can never on its own mark an answer Ready; that requires verified evidence.</p>
+        ${leadsHtml}
       </div>
     </section>
   `;
