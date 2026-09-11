@@ -135,6 +135,23 @@
   .tier-lead { background: rgba(184,147,58,0.2); color: #8A6B1E; }
   .lead-row { border-left: 3px solid var(--gold); }
 
+  /* ---------- Sources to verify (priority tags) ---------- */
+  .priority-tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 3px;
+    letter-spacing: 0.02em;
+  }
+  .priority-high { background: rgba(161,61,46,0.16); color: var(--alert); }
+  .priority-medium { background: rgba(184,147,58,0.2); color: #8A6B1E; }
+  .priority-low { background: rgba(35,38,31,0.08); color: var(--ink-soft); }
+  .verify-row.verify-high { border-left: 3px solid var(--alert); }
+  .verify-row.verify-medium { border-left: 3px solid var(--gold); }
+  .verify-row.verify-low { border-left: 3px solid var(--line); }
+
   footer { padding: 44px 0 60px; color: var(--ink-soft); font-size: 0.88rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
   footer a { color: var(--ink-soft); }
 
@@ -211,13 +228,14 @@ async function renderSite() {
 
   document.title = `${site.name} — Heritage Readiness Model`;
 
-  const [pathComparison, stages, siteAnswers, components, threats, mapFeatures] = await Promise.all([
+  const [pathComparison, stages, siteAnswers, components, threats, mapFeatures, researchLeads] = await Promise.all([
     api(`site_path_comparison?site_id=eq.${siteId}&select=*`),
     api(`stages?scope=eq.site&order=stage_number.asc`),
     api(`site_answers?site_id=eq.${siteId}&select=*,assessment_questions(prompt,stage_number,question_type),evidence_records(description,source_citation,verification_tier)`),
     api(`site_components?site_id=eq.${siteId}&select=*`),
     api(`threats?site_id=eq.${siteId}&select=*`),
-    api(`map_features?site_id=eq.${siteId}&select=*`)
+    api(`map_features?site_id=eq.${siteId}&select=*`),
+    api(`research_leads?site_id=eq.${siteId}&status=eq.open&select=*,stages(name)&order=priority.asc`)
   ]);
 
   // ---- Path summary cards ----
@@ -297,6 +315,23 @@ async function renderSite() {
         </div>`).join('')}</div>`
     : `<p class="qa-empty">No open research leads right now.</p>`;
 
+  // ---- Sources to Verify: unread sources still to check, distinct from
+  // the "Research leads" above (which are sources we HAVE read, just not
+  // yet confirmed firsthand). This section is genuinely unread material --
+  // pointers, not evidence.
+  const priorityOrder = { high: 0, medium: 1, low: 2 };
+  const sortedLeads = [...researchLeads].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+  const verifyHtml = sortedLeads.length
+    ? `<div class="item-list">${sortedLeads.map(l => `
+        <div class="item-row verify-row verify-${l.priority}">
+          <div>
+            <div class="name">${l.description}</div>
+            <div class="sub">${l.stages ? l.stages.name : 'General'}${l.source_pointer ? ' · ' + l.source_pointer : ''}</div>
+          </div>
+          <span class="priority-tag priority-${l.priority}">${l.priority.toUpperCase()}</span>
+        </div>`).join('')}</div>`
+    : `<p class="qa-empty">No open items to verify right now.</p>`;
+
   // ---- Components ----
   const componentsHtml = components.length
     ? `<div class="item-list">${components.map(c => `
@@ -346,6 +381,14 @@ async function renderSite() {
         <h2 class="section-title">Research leads</h2>
         <p class="kicker">Real leads worth following up — a newspaper mention, an informal tip — that haven't been confirmed firsthand yet. These can point research in the right direction, but can never on their own mark an answer Ready; that requires verified evidence.</p>
         ${leadsHtml}
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2 class="section-title">Sources to verify</h2>
+        <p class="kicker">Genuinely unread material, not yet extracted at all — distinct from the leads above, which have at least been read. Nothing here is evidence of any kind until someone actually reads it.</p>
+        ${verifyHtml}
       </div>
     </section>
 
