@@ -231,7 +231,7 @@ async function renderSite() {
   const [pathComparison, stages, siteAnswers, components, threats, mapFeatures, researchLeads] = await Promise.all([
     api(`site_path_comparison?site_id=eq.${siteId}&select=*`),
     api(`stages?scope=eq.site&order=stage_number.asc`),
-    api(`site_answers?site_id=eq.${siteId}&select=*,assessment_questions(prompt,stage_number,question_type),evidence_records(description,source_citation,verification_tier)`),
+    api(`site_answers?site_id=eq.${siteId}&select=*,assessment_questions(prompt,stage_number,question_type),evidence_records(description,source_citation,verification_tier,file_reference)`),
     api(`site_components?site_id=eq.${siteId}&select=*`),
     api(`threats?site_id=eq.${siteId}&select=*`),
     api(`map_features?site_id=eq.${siteId}&select=*`),
@@ -268,11 +268,17 @@ async function renderSite() {
   // mention) that just hasn't been confirmed firsthand yet; it's shown
   // inline like this, but never counted toward marking an answer Ready
   // (that rule is enforced in the database itself, not just visually here).
-  const renderEvidenceItem = e => `
+  const renderEvidenceItem = e => {
+    const citationText = e.source_citation || e.description;
+    const citation = e.file_reference
+      ? `<a href="${e.file_reference}" target="_blank" rel="noopener">${citationText}</a>`
+      : citationText;
+    return `
     <span class="evidence-item">
       <span class="tier-tag tier-${e.verification_tier}">${e.verification_tier === 'verified' ? 'VERIFIED' : 'LEAD'}</span>
-      ${e.source_citation || e.description}
+      ${citation}
     </span>`;
+  };
 
   const stagesHtml = stages.map(st => {
     const answers = answersByStage[st.stage_number] || [];
@@ -305,14 +311,20 @@ async function renderSite() {
     });
   });
   const leadsHtml = allLeads.length
-    ? `<div class="item-list">${allLeads.map(l => `
+    ? `<div class="item-list">${allLeads.map(l => {
+        const citationText = l.source_citation || l.description;
+        const citation = l.file_reference
+          ? `<a href="${l.file_reference}" target="_blank" rel="noopener">${citationText}</a>`
+          : citationText;
+        return `
         <div class="item-row lead-row">
           <div>
-            <div class="name">${l.source_citation || l.description}</div>
+            <div class="name">${citation}</div>
             <div class="sub">Relates to: ${l.prompt}</div>
           </div>
           <span class="tier-tag tier-lead">LEAD</span>
-        </div>`).join('')}</div>`
+        </div>`;
+      }).join('')}</div>`
     : `<p class="qa-empty">No open research leads right now.</p>`;
 
   // ---- Sources to Verify: unread sources still to check, distinct from
@@ -321,12 +333,17 @@ async function renderSite() {
   // pointers, not evidence.
   const priorityOrder = { high: 0, medium: 1, low: 2 };
   const sortedLeads = [...researchLeads].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+  const renderSourcePointer = p => {
+    if (!p) return '';
+    const isUrl = /^https?:\/\//i.test(p);
+    return isUrl ? `<a href="${p}" target="_blank" rel="noopener">${p}</a>` : p;
+  };
   const verifyHtml = sortedLeads.length
     ? `<div class="item-list">${sortedLeads.map(l => `
         <div class="item-row verify-row verify-${l.priority}">
           <div>
             <div class="name">${l.description}</div>
-            <div class="sub">${l.stages ? l.stages.name : 'General'}${l.source_pointer ? ' · ' + l.source_pointer : ''}</div>
+            <div class="sub">${l.stages ? l.stages.name : 'General'}${l.source_pointer ? ' · ' + renderSourcePointer(l.source_pointer) : ''}</div>
           </div>
           <span class="priority-tag priority-${l.priority}">${l.priority.toUpperCase()}</span>
         </div>`).join('')}</div>`
