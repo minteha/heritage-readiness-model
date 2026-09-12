@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Heritage Readiness Model — Site</title>
+<title>Heritage Readiness Model - Site</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -144,6 +144,7 @@
   .stage-row-name { font-weight: 500; font-size: 0.9rem; }
   .stage-status-badge { font-size: 0.68rem; padding: 2px 8px; }
   .stage-row-why { font-size: 0.83rem; color: var(--ink-soft); margin: 0 0 4px; }
+  .stage-row-example { font-size: 0.8rem; color: var(--olive-deep); font-style: italic; margin: 0 0 6px; }
   .stage-row-data { font-size: 0.78rem; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; margin: 0; }
 
   /* ---------- Stage blocks ---------- */
@@ -302,7 +303,7 @@ async function renderSite() {
     return;
   }
 
-  document.title = `${site.name} — Heritage Readiness Model`;
+  document.title = `${site.name} - Heritage Readiness Model`;
 
   const [pathComparison, stages, siteAnswers, components, threats, mapFeatures, researchLeads, allStages] = await Promise.all([
     api(`site_path_comparison?site_id=eq.${siteId}&select=*`),
@@ -320,11 +321,12 @@ async function renderSite() {
   // ---- Path summary cards ----
   const pathOrder = ['wh', 'ich_representative', 'ich_urgent'];
   const sortedPaths = pathOrder.map(id => pathComparison.find(p => p.criteria_list_id === id)).filter(Boolean);
+  const SHORT_PATH_LABEL = { wh: 'World Heritage', ich_representative: 'ICH Representative', ich_urgent: 'ICH Urgent Safeguarding' };
   const pathCardsHtml = sortedPaths.map(p => `
     <a class="path-card ${p.is_recommended ? 'recommended' : ''}" href="path.html?site=${siteId}&path=${p.criteria_list_id}">
       ${p.is_recommended ? '<span class="recommended-tag">RECOMMENDED</span>' : ''}
       <span class="label">${p.track_id === 'world_heritage' ? '1972 CONVENTION' : '2003 CONVENTION'}</span>
-      <h3>${p.path_name.split('(')[0].trim()}</h3>
+      <h3>${SHORT_PATH_LABEL[p.criteria_list_id] || p.path_name}</h3>
       <div class="pct">${p.coverage_pct}%</div>
       <span class="status-badge status-${p.overall_status}">${STATUS_LABEL[p.overall_status] || p.overall_status}</span>
     </a>
@@ -344,6 +346,25 @@ async function renderSite() {
     stageStatusByAssessment[p.assessment_id] = stageStatus;
   }));
 
+  const STAGE_EXAMPLE = {
+    0: 'Example: checking whether Mi\u2019ilya\u2019s olive traditions are already in Israel\u2019s national ICH inventory.',
+    1: 'Example: name, coordinates, and Tentative List status for the site.',
+    2: 'Example: a short summary of the site\u2019s history and physical setting.',
+    3: 'Example: choosing which World Heritage criterion, like (v), the site actually argues for.',
+    4: 'Example: tree age, system age, and continuity of use tracked as separate facts, not blended together.',
+    5: 'Example: does the boundary include the whole working landscape, or just isolated fields?',
+    6: 'Example: is the site still made of its original materials and form, not a modern reconstruction?',
+    7: 'Example: comparing Mi\u2019ilya against Battir, Lavaux, and Serra de Tramuntana.',
+    8: 'Example: has the community given consent, and how many people still practice the tradition?',
+    9: 'Example: rating each building or component as good, at risk, or gone.',
+    10: 'Example: a specific construction plan, with a real document date and figures.',
+    11: 'Example: a numbered law or directive that actually protects the site.',
+    12: 'Example: who is responsible for the site day to day, and what they\u2019ve committed to.',
+    13: 'Example: is anyone still making a living from the tradition today?',
+    14: 'Example: mapped core and buffer zones, with real coordinates.',
+    15: 'Example: the readiness summary you are reading right now.'
+  };
+
   const renderStageList = assessmentId => {
     const rows = stageStatusByAssessment[assessmentId] || [];
     if (!rows.length) return '<p class="qa-empty">No stages apply to this path.</p>';
@@ -356,6 +377,7 @@ async function renderSite() {
             <span class="status-badge stage-status-badge status-${st.stage_status}">${STATUS_LABEL[st.stage_status] || st.stage_status} · ${st.coverage_pct}%</span>
           </div>
           <p class="stage-row-why">${info ? info.description : ''}</p>
+          ${STAGE_EXAMPLE[st.stage_number] ? `<p class="stage-row-example">${STAGE_EXAMPLE[st.stage_number]}</p>` : ''}
           <p class="stage-row-data">${st.answered_questions} of ${st.total_questions} questions answered${st.source_type === 'official_unesco' ? ' · Official UNESCO requirement' : ' · Tool extension'}</p>
         </div>`;
     }).join('');
@@ -366,13 +388,13 @@ async function renderSite() {
     return `
       <div class="readiness-block readiness-${p.criteria_list_id} ${p.is_recommended ? 'recommended' : ''}">
         <div class="readiness-head">
-          <h3>${p.path_name.split('(')[0].trim()}</h3>
+          <h3>${SHORT_PATH_LABEL[p.criteria_list_id] || p.path_name}</h3>
           <span class="status-badge status-${p.overall_status}">${STATUS_LABEL[p.overall_status] || p.overall_status}</span>
         </div>
         ${fb ? `
           <p class="readiness-summary">${fb.feedback_text}</p>
           ${fb.next_actions && fb.next_actions.length ? `
-            <div class="readiness-label">RECOMMENDATION — WHAT TO DO NEXT</div>
+            <div class="readiness-label">RECOMMENDATION: WHAT TO DO NEXT</div>
             <ul class="readiness-actions">${fb.next_actions.map(a => `<li>${a}</li>`).join('')}</ul>
           ` : ''}
         ` : `<p class="qa-empty">No summary generated yet for this path.</p>`}
@@ -504,7 +526,7 @@ async function renderSite() {
   const threatsHtml = threats.length
     ? `<div class="item-list">${threats.map(t => `
         <div class="item-row">
-          <div><div class="name">${t.threat_name}</div><div class="sub">Probability ${t.probability ?? '—'} · Severity ${t.severity ?? '—'}${t.value_at_risk ? ' · ' + t.value_at_risk : ''}</div></div>
+          <div><div class="name">${t.threat_name}</div><div class="sub">Probability ${t.probability ?? 'Unknown'}. Severity ${t.severity ?? 'Unknown'}${t.value_at_risk ? '. ' + t.value_at_risk : ''}</div></div>
           <span class="pill pill-${t.danger_tier}">${t.danger_tier}</span>
         </div>`).join('')}</div>`
     : `<p class="qa-empty">No threats recorded yet.</p>`;
@@ -533,7 +555,7 @@ async function renderSite() {
   const galleryHtml = MIILYA_GALLERY.map(p => `
     <figure class="gallery-item">
       <img src="${filePathUrl(p.file)}" alt="${p.caption}" loading="lazy" />
-      <figcaption>${p.caption} — <a href="https://commons.wikimedia.org/wiki/Category:Mi%27ilya" target="_blank" rel="noopener">${p.credit}</a>, CC BY 2.5</figcaption>
+      <figcaption>${p.caption}. <a href="https://commons.wikimedia.org/wiki/Category:Mi%27ilya" target="_blank" rel="noopener">${p.credit}</a>, CC BY 2.5</figcaption>
     </figure>`).join('');
 
   document.getElementById('app').innerHTML = `
@@ -545,7 +567,7 @@ async function renderSite() {
         ${site.description ? `<p class="desc">${site.description}</p>` : ''}
         ${relatedSite ? `<p class="desc" style="margin-top:14px;"><a href="site.html?site=${relatedSite.site_id}" style="color:var(--gold);">→ Companion case: ${relatedSite.name}</a></p>` : ''}
         <div class="hero-actions">
-          <button class="hero-btn" onclick="alert('Under construction — we will deal with the independent API at the end of the project.')">+ Add File / Lead / Evidence</button>
+          <button class="hero-btn" onclick="alert('Under construction. We will deal with the independent API at the end of the project.')">+ Add File / Lead / Evidence</button>
           <a class="hero-btn hero-btn-primary" href="field-packet.html?site=${siteId}">Generate Field Research Packet</a>
         </div>
       </div>
@@ -560,7 +582,7 @@ async function renderSite() {
     <section>
       <div class="wrap">
         <h2 class="section-title">Which path fits best?</h2>
-        <p class="kicker">Coverage shows how much of each path's question bank has evidence so far. Status is the actual verdict — a single failed gatekeeper (e.g. missing community consent) overrides coverage entirely, so the highest percentage is not always the recommended path.</p>
+        <p class="kicker">Coverage shows how much of each path's question bank has evidence so far. Status is the actual verdict. A single failed gatekeeper (for example, missing community consent) overrides coverage entirely, so the highest percentage is not always the recommended path.</p>
         <div class="paths">${pathCardsHtml}</div>
       </div>
     </section>
@@ -576,7 +598,7 @@ async function renderSite() {
     <section>
       <div class="wrap">
         <h2 class="section-title">Research leads</h2>
-        <p class="kicker">Real leads worth following up — a newspaper mention, an informal tip — that haven't been confirmed firsthand yet. These can point research in the right direction, but can never on their own mark an answer Ready; that requires verified evidence.</p>
+        <p class="kicker">Real leads worth following up: a newspaper mention, an informal tip, that haven't been confirmed firsthand yet. These can point research in the right direction, but can never on their own mark an answer Ready. That requires verified evidence.</p>
         ${leadsHtml}
       </div>
     </section>
@@ -584,7 +606,7 @@ async function renderSite() {
     <section>
       <div class="wrap">
         <h2 class="section-title">Sources to verify</h2>
-        <p class="kicker">Genuinely unread material, not yet extracted at all — distinct from the leads above, which have at least been read. Nothing here is evidence of any kind until someone actually reads it.</p>
+        <p class="kicker">Genuinely unread material, not yet extracted at all. Distinct from the leads above, which have at least been read. Nothing here is evidence of any kind until someone actually reads it.</p>
         ${verifyHtml}
       </div>
     </section>
@@ -592,7 +614,7 @@ async function renderSite() {
     <section class="alt">
       <div class="wrap">
         <h2 class="section-title">Site record</h2>
-        <p class="kicker">Facts about the place itself — shared by all three paths above, recorded once.</p>
+        <p class="kicker">Facts about the place itself, shared by all three paths above, recorded once.</p>
         ${stagesHtml}
       </div>
     </section>
