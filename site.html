@@ -598,11 +598,12 @@ async function renderSite() {
       </div>
     </div>` : ''}
 
+    ${!site.is_reference_case ? `
     <section class="gallery-section">
       <div class="wrap">
         <div class="photo-gallery">${galleryHtml}</div>
       </div>
-    </section>
+    </section>` : ''}
 
     <section>
       <div class="wrap">
