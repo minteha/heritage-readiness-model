@@ -51,6 +51,15 @@
   .hero h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); color: var(--stone); margin: 6px 0 10px; }
   .hero .meta { font-size: 0.95rem; color: #C9C3B2; }
   .hero .desc { max-width: 68ch; color: #D8D3C4; margin-top: 14px; font-size: 1.02rem; }
+  .hero-actions { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
+  .hero-btn {
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 0.88rem; font-weight: 500;
+    padding: 10px 18px; border-radius: 4px; border: 1px solid #6A6D5F; background: transparent;
+    color: var(--stone); cursor: pointer; text-decoration: none; display: inline-block;
+  }
+  .hero-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .hero-btn-primary { background: var(--gold); border-color: var(--gold); color: var(--ink); font-weight: 600; }
+  .hero-btn-primary:hover { color: var(--ink); opacity: 0.9; }
 
   section { padding: 56px 0; }
   section.alt { background: var(--stone-dim); }
@@ -189,6 +198,15 @@
   .verify-row.verify-high { border-left: 3px solid var(--alert); }
   .verify-row.verify-medium { border-left: 3px solid var(--gold); }
   .verify-row.verify-low { border-left: 3px solid var(--line); }
+  .confirm-action {
+    margin-top: 8px; font-size: 0.85rem; color: var(--ink); background: var(--stone-dim);
+    padding: 8px 10px; border-radius: 3px;
+  }
+  .confirm-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--olive-deep); font-weight: 600; margin-right: 6px; }
+  .related-details { margin-top: 8px; }
+  .related-details summary { cursor: pointer; font-size: 0.82rem; color: var(--slate); font-weight: 500; }
+  .related-needs { margin: 8px 0 0; padding-left: 20px; }
+  .related-needs li { font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 4px; }
 
   footer { padding: 44px 0 60px; color: var(--ink-soft); font-size: 0.88rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
   footer a { color: var(--ink-soft); }
@@ -441,9 +459,18 @@ async function renderSite() {
   const verifyHtml = sortedLeads.length
     ? `<div class="item-list">${sortedLeads.map(l => `
         <div class="item-row verify-row verify-${l.priority}">
-          <div>
+          <div style="flex:1;">
             <div class="name">${l.description}</div>
             <div class="sub">${l.stages ? l.stages.name : 'General'}${l.source_pointer ? ' · ' + renderSourcePointer(l.source_pointer) : ''}</div>
+            ${l.confirmation_action ? `
+              <div class="confirm-action"><span class="confirm-label">TO CONFIRM:</span> ${l.confirmation_action}</div>
+            ` : ''}
+            ${l.related_data_needs && l.related_data_needs.length ? `
+              <details class="related-details">
+                <summary>Also capture during this same visit (${l.related_data_needs.length})</summary>
+                <ul class="related-needs">${l.related_data_needs.map(n => `<li>${n}</li>`).join('')}</ul>
+              </details>
+            ` : ''}
           </div>
           <span class="priority-tag priority-${l.priority}">${l.priority.toUpperCase()}</span>
         </div>`).join('')}</div>`
@@ -483,6 +510,10 @@ async function renderSite() {
         <div class="meta">${[site.region, site.country].filter(Boolean).join(', ')}</div>
         ${site.description ? `<p class="desc">${site.description}</p>` : ''}
         ${relatedSite ? `<p class="desc" style="margin-top:14px;"><a href="site.html?site=${relatedSite.site_id}" style="color:var(--gold);">→ Companion case: ${relatedSite.name}</a></p>` : ''}
+        <div class="hero-actions">
+          <button class="hero-btn" onclick="alert('Under construction — we will deal with the independent API at the end of the project.')">+ Add File / Lead / Evidence</button>
+          <a class="hero-btn hero-btn-primary" href="field-packet.html?site=${siteId}">Generate Field Research Packet</a>
+        </div>
       </div>
     </div>
 

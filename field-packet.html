@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field Research Packet — Heritage Readiness Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #23261F; --ink-soft: #4A4E42; --line: #D8D2C2; --gold: #B8933A; --olive-deep: #4F5C45;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'IBM Plex Sans', sans-serif; color: var(--ink); background: #fff;
+    max-width: 780px; margin: 0 auto; padding: 40px 24px 80px;
+  }
+  h1 { font-family: 'Fraunces', serif; font-size: 1.9rem; margin: 0 0 4px; }
+  .meta-line { font-size: 0.9rem; color: var(--ink-soft); margin-bottom: 28px; }
+  .toolbar {
+    display: flex; gap: 12px; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--line);
+  }
+  .toolbar button, .toolbar a {
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 0.88rem; font-weight: 600;
+    padding: 9px 16px; border-radius: 4px; border: 1px solid var(--gold); background: var(--gold);
+    color: var(--ink); cursor: pointer; text-decoration: none;
+  }
+  .toolbar a.secondary { background: transparent; color: var(--ink); border-color: var(--line); }
+  h2.section-title {
+    font-family: 'Fraunces', serif; font-size: 1.3rem; margin: 36px 0 6px;
+    border-bottom: 2px solid var(--ink); padding-bottom: 6px;
+  }
+  .section-note { font-size: 0.86rem; color: var(--ink-soft); margin: 0 0 16px; }
+  .task-item { border: 1px solid var(--line); border-radius: 4px; padding: 14px 16px; margin-bottom: 14px; page-break-inside: avoid; }
+  .task-priority {
+    display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; font-weight: 600;
+    padding: 2px 7px; border-radius: 3px; margin-bottom: 6px; background: #f0ece0;
+  }
+  .task-desc { font-size: 0.94rem; margin: 0 0 8px; }
+  .task-action { font-size: 0.86rem; margin: 0 0 8px; }
+  .task-action .label { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; color: var(--olive-deep); font-weight: 600; }
+  .checklist { margin: 8px 0; padding-left: 0; list-style: none; }
+  .checklist li { font-size: 0.86rem; margin-bottom: 6px; padding-left: 22px; position: relative; }
+  .checklist li::before {
+    content: ''; position: absolute; left: 0; top: 1px; width: 13px; height: 13px;
+    border: 1.5px solid var(--ink); border-radius: 2px;
+  }
+  .notes-line { border-bottom: 1px solid var(--line); height: 24px; margin-top: 4px; }
+  .notes-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; color: var(--ink-soft); margin-top: 10px; }
+  .stage-gap { border-left: 3px solid var(--line); padding: 8px 0 8px 14px; margin-bottom: 14px; page-break-inside: avoid; }
+  .stage-gap-name { font-weight: 600; font-size: 0.92rem; }
+  .stage-gap-why { font-size: 0.84rem; color: var(--ink-soft); margin: 2px 0 6px; }
+  .stage-gap-data { font-family: 'IBM Plex Mono', monospace; font-size: 0.76rem; color: var(--ink-soft); }
+  .empty-note { font-size: 0.88rem; color: var(--ink-soft); font-style: italic; }
+
+  @media print {
+    .toolbar { display: none; }
+    body { padding: 0 10px; max-width: 100%; }
+    .task-item, .stage-gap { border-color: #999; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <p>Loading…</p>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://dntqhsrxbmhdbfyqnimk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRudHFoc3J4Ym1oZGJmeXFuaW1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTk1NTIsImV4cCI6MjEwNDQ3NTU1Mn0.SyxoJflfFLX3UkqK7HKaJES2DGdjuI5BjnWz3YYIsiE';
+
+async function api(path) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
+}
+
+const PRIORITY_LABEL = { high: 'HIGH PRIORITY', medium: 'MEDIUM PRIORITY', low: 'LOW PRIORITY' };
+
+function renderEmpty(msg) {
+  document.getElementById('app').innerHTML = `<p>${msg}</p>`;
+}
+
+async function renderPacket() {
+  const params = new URLSearchParams(window.location.search);
+  const siteId = params.get('site');
+  if (!siteId) { renderEmpty('No site selected.'); return; }
+
+  let site;
+  try {
+    const sites = await api(`sites?site_id=eq.${siteId}&select=*`);
+    if (!sites.length) { renderEmpty('Site not found.'); return; }
+    site = sites[0];
+  } catch (e) {
+    renderEmpty('Could not load site data.'); console.error(e); return;
+  }
+
+  const [leads, pathComparison] = await Promise.all([
+    api(`research_leads?site_id=eq.${siteId}&status=eq.open&select=*,stages(name)&order=priority.asc`),
+    api(`site_path_comparison?site_id=eq.${siteId}&select=*`)
+  ]);
+
+  const priorityOrder = { high: 0, medium: 1, low: 2 };
+  const sortedLeads = [...leads].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+
+  const tasksHtml = sortedLeads.length ? sortedLeads.map(l => `
+    <div class="task-item">
+      <span class="task-priority">${PRIORITY_LABEL[l.priority] || l.priority.toUpperCase()}</span>
+      <p class="task-desc">${l.description}</p>
+      ${l.confirmation_action ? `<p class="task-action"><span class="label">TO CONFIRM:</span> ${l.confirmation_action}</p>` : ''}
+      ${l.related_data_needs && l.related_data_needs.length ? `
+        <div class="notes-label">ALSO CAPTURE DURING THIS SAME VISIT:</div>
+        <ul class="checklist">${l.related_data_needs.map(n => `<li>${n}</li>`).join('')}</ul>
+      ` : ''}
+      <div class="notes-label">FINDINGS / NOTES:</div>
+      <div class="notes-line"></div>
+      <div class="notes-line"></div>
+      <div class="notes-line"></div>
+    </div>
+  `).join('') : `<p class="empty-note">No open items to investigate right now — nothing to print for this section.</p>`;
+
+  // Fetch per-path stage gaps (stages with low/no coverage)
+  const pathOrder = ['wh', 'ich_representative', 'ich_urgent'];
+  const sortedPaths = pathOrder.map(id => pathComparison.find(p => p.criteria_list_id === id)).filter(Boolean);
+  const stagesByAssessment = {};
+  await Promise.all(sortedPaths.map(async p => {
+    const rows = await api(`assessment_stage_status?assessment_id=eq.${p.assessment_id}&select=*&order=stage_number.asc`);
+    stagesByAssessment[p.assessment_id] = rows.filter(r => r.stage_status !== 'ready');
+  }));
+
+  const [allStages] = await Promise.all([
+    api(`stages?select=stage_number,description&order=stage_number.asc`)
+  ]);
+  const descByStage = {};
+  allStages.forEach(s => { descByStage[s.stage_number] = s.description; });
+
+  const gapsHtml = sortedPaths.map(p => {
+    const gaps = stagesByAssessment[p.assessment_id] || [];
+    if (!gaps.length) return `
+      <h3 style="font-size:1rem; margin: 20px 0 8px;">${p.path_name.split('(')[0].trim()}</h3>
+      <p class="empty-note">No open stage gaps for this path.</p>`;
+    return `
+      <h3 style="font-size:1rem; margin: 20px 0 8px;">${p.path_name.split('(')[0].trim()}</h3>
+      ${gaps.map(g => `
+        <div class="stage-gap">
+          <div class="stage-gap-name">${g.stage_name}</div>
+          <p class="stage-gap-why">${descByStage[g.stage_number] || ''}</p>
+          <div class="stage-gap-data">${g.answered_questions} of ${g.total_questions} answered — ${g.coverage_pct}%</div>
+          <div class="notes-label" style="margin-top:8px;">FINDINGS / NOTES:</div>
+          <div class="notes-line"></div>
+          <div class="notes-line"></div>
+        </div>`).join('')}`;
+  }).join('');
+
+  document.title = `Field Packet — ${site.name}`;
+
+  document.getElementById('app').innerHTML = `
+    <h1>Field Research Packet</h1>
+    <div class="meta-line">${site.name} · Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+
+    <div class="toolbar">
+      <button onclick="window.print()">Print / Save as PDF</button>
+      <a class="secondary" href="site.html?site=${siteId}">← Back to case study</a>
+    </div>
+
+    <h2 class="section-title">Open items to confirm</h2>
+    <p class="section-note">Sorted by priority. Each item includes what would confirm it, and — where one visit can resolve several things at once — everything else worth asking while you're there. Write findings directly below each item, then bring this back and share it.</p>
+    ${tasksHtml}
+
+    <h2 class="section-title">Stage-by-stage gaps, by path</h2>
+    <p class="section-note">Stages not yet marked Ready, across all three paths — a broader view than just the open leads above.</p>
+    ${gapsHtml}
+  `;
+}
+
+renderPacket().catch(e => { console.error(e); renderEmpty('Something went wrong generating this packet.'); });
+</script>
+</body>
+</html>
