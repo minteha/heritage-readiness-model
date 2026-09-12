@@ -52,6 +52,11 @@
   .hero .meta { font-size: 0.95rem; color: #C9C3B2; }
   .hero .desc { max-width: 68ch; color: #D8D3C4; margin-top: 14px; font-size: 1.02rem; }
   .hero-actions { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
+  .hero-reference { border-bottom: 4px solid var(--olive); }
+  .reference-banner {
+    background: var(--olive-deep); color: #fff; padding: 14px 0; font-size: 0.92rem;
+  }
+  .reference-banner strong { color: var(--gold); }
   .hero-btn {
     font-family: 'IBM Plex Sans', sans-serif; font-size: 0.88rem; font-weight: 500;
     padding: 10px 18px; border-radius: 4px; border: 1px solid #6A6D5F; background: transparent;
@@ -117,7 +122,13 @@
   .readiness-block.recommended { border-left-color: var(--gold); background: #FBF3E2; }
   .readiness-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
   .readiness-head h3 { font-size: 1.15rem; margin: 0; }
-  .readiness-summary { font-size: 0.96rem; color: var(--ink); margin: 0 0 16px; line-height: 1.6; }
+  /* ---------- Next Steps Helper: the most important section, made
+     visually distinct with a larger title and a stronger border ---------- */
+  .next-steps-section { border-top: 4px solid var(--gold); border-bottom: 4px solid var(--gold); }
+  .next-steps-title { font-size: 2.1rem; }
+  .next-steps-subtitle { font-size: 1.05rem; color: var(--ink-soft); max-width: 70ch; margin: 0 0 24px; }
+  .readiness-block { border-width: 2px; }
+  .readiness-summary { font-size: 1.05rem; color: var(--ink); margin: 0 0 16px; line-height: 1.7; }
   .readiness-label {
     font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--ink-soft);
     letter-spacing: 0.03em; margin-bottom: 8px;
@@ -559,19 +570,26 @@ async function renderSite() {
     </figure>`).join('');
 
   document.getElementById('app').innerHTML = `
-    <div class="hero">
+    <div class="hero ${site.is_reference_case ? 'hero-reference' : ''}">
       <div class="wrap">
-        <span class="mono" style="color:var(--gold); font-size:0.82rem;">CASE STUDY</span>
+        <span class="mono" style="color:var(--gold); font-size:0.82rem;">${site.is_reference_case ? 'COMPLETE STUDY CASE' : 'CASE STUDY'}</span>
         <h1>${site.name}</h1>
         <div class="meta">${[site.region, site.country].filter(Boolean).join(', ')}</div>
         ${site.description ? `<p class="desc">${site.description}</p>` : ''}
-        ${relatedSite ? `<p class="desc" style="margin-top:14px;"><a href="site.html?site=${relatedSite.site_id}" style="color:var(--gold);">→ Companion case: ${relatedSite.name}</a></p>` : ''}
+        ${relatedSite ? `<p class="desc" style="margin-top:14px;"><a href="site.html?site=${relatedSite.site_id}" style="color:var(--gold);">Companion case: ${relatedSite.name}</a></p>` : ''}
+        ${!site.is_reference_case ? `
         <div class="hero-actions">
           <button class="hero-btn" onclick="alert('Under construction. We will deal with the independent API at the end of the project.')">+ Add File / Lead / Evidence</button>
           <a class="hero-btn hero-btn-primary" href="field-packet.html?site=${siteId}">Generate Field Research Packet</a>
-        </div>
+        </div>` : ''}
       </div>
     </div>
+    ${site.is_reference_case ? `
+    <div class="reference-banner">
+      <div class="wrap">
+        <strong>This case is already decided.</strong> The percentages and stage details below show how much of the real record we've documented in our own system, not how "ready" this site is; it's already inscribed. Read this page for what it teaches, not as a live assessment in progress.
+      </div>
+    </div>` : ''}
 
     <section class="gallery-section">
       <div class="wrap">
@@ -587,10 +605,10 @@ async function renderSite() {
       </div>
     </section>
 
-    <section class="alt">
+    <section class="alt next-steps-section">
       <div class="wrap">
-        <h2 class="section-title">Readiness summary</h2>
-        <p class="kicker">For each path: what's already documented, what's still missing, and the recommended next step toward being UNESCO-ready.</p>
+        <h2 class="section-title next-steps-title">Next Steps Helper</h2>
+        <p class="next-steps-subtitle">Online integrated guidance: what's already documented, what's still missing, and the recommended next step toward being UNESCO ready.</p>
         <div class="readiness-grid">${readinessHtml}</div>
       </div>
     </section>
