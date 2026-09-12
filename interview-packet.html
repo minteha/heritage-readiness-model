@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interview Mode - Heritage Readiness Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #23261F; --ink-soft: #4A4E42; --line: #D8D2C2; --gold: #B8933A; --olive-deep: #4F5C45; --olive: #6B7A5E;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'IBM Plex Sans', sans-serif; color: var(--ink); background: #fff;
+    max-width: 780px; margin: 0 auto; padding: 40px 24px 80px;
+  }
+  h1 { font-family: 'Fraunces', serif; font-size: 1.9rem; margin: 0 0 4px; }
+  .meta-line { font-size: 0.9rem; color: var(--ink-soft); margin-bottom: 20px; }
+  .intro-note {
+    background: #F4F1E8; border-left: 4px solid var(--olive); padding: 14px 16px;
+    font-size: 0.92rem; line-height: 1.55; margin-bottom: 28px; border-radius: 0 4px 4px 0;
+  }
+  .toolbar {
+    display: flex; gap: 12px; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--line);
+  }
+  .toolbar button, .toolbar a {
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 0.88rem; font-weight: 600;
+    padding: 9px 16px; border-radius: 4px; border: 1px solid var(--gold); background: var(--gold);
+    color: var(--ink); cursor: pointer; text-decoration: none;
+  }
+  .toolbar a.secondary { background: transparent; color: var(--ink); border-color: var(--line); }
+  h2.section-title {
+    font-family: 'Fraunces', serif; font-size: 1.3rem; margin: 36px 0 6px;
+    border-bottom: 2px solid var(--ink); padding-bottom: 6px;
+  }
+  .section-note { font-size: 0.86rem; color: var(--ink-soft); margin: 0 0 16px; }
+  .who-block {
+    border: 2px solid var(--olive); border-radius: 4px; padding: 16px 18px; margin-bottom: 20px;
+    page-break-inside: avoid;
+  }
+  .who-block-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--olive-deep); font-weight: 600;
+    letter-spacing: 0.03em; margin-bottom: 6px;
+  }
+  .who-block-desc { font-size: 0.95rem; margin: 0 0 4px; }
+  .bullseye-count {
+    display: inline-block; background: var(--gold); color: var(--ink); font-weight: 700;
+    font-size: 0.78rem; padding: 3px 10px; border-radius: 12px; margin-top: 8px;
+  }
+  .talking-points { margin: 8px 0; padding-left: 0; list-style: none; }
+  .talking-points li {
+    font-size: 0.9rem; margin-bottom: 10px; padding-left: 24px; position: relative; line-height: 1.4;
+  }
+  .talking-points li::before {
+    content: ''; position: absolute; left: 0; top: 2px; width: 14px; height: 14px;
+    border: 1.5px solid var(--ink); border-radius: 2px;
+  }
+  .notes-line { border-bottom: 1px solid var(--line); height: 26px; margin-top: 4px; }
+  .notes-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; color: var(--ink-soft); margin-top: 10px; }
+  .empty-note { font-size: 0.88rem; color: var(--ink-soft); font-style: italic; }
+
+  @media print {
+    .toolbar { display: none; }
+    body { padding: 0 10px; max-width: 100%; }
+    .who-block { border-color: #333; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <p>Loading...</p>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://dntqhsrxbmhdbfyqnimk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRudHFoc3J4Ym1oZGJmeXFuaW1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTk1NTIsImV4cCI6MjEwNDQ3NTU1Mn0.SyxoJflfFLX3UkqK7HKaJES2DGdjuI5BjnWz3YYIsiE';
+
+async function api(path) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
+}
+
+function renderEmpty(msg) {
+  document.getElementById('app').innerHTML = `<p>${msg}</p>`;
+}
+
+function isInterviewRelevant(lead) {
+  const text = `${lead.confirmation_action || ''} ${lead.description || ''}`.toLowerCase();
+  return text.includes('interview') || text.includes('family') || text.includes('ask') || text.includes('outreach');
+}
+
+async function renderInterviewPacket() {
+  const params = new URLSearchParams(window.location.search);
+  const siteId = params.get('site');
+  if (!siteId) { renderEmpty('No site selected.'); return; }
+
+  let site;
+  try {
+    const sites = await api(`sites?site_id=eq.${siteId}&select=*`);
+    if (!sites.length) { renderEmpty('Site not found.'); return; }
+    site = sites[0];
+  } catch (e) {
+    renderEmpty('Could not load site data.'); console.error(e); return;
+  }
+
+  const allLeads = await api(`research_leads?site_id=eq.${siteId}&status=eq.open&select=*,stages(name)`);
+  const interviewLeads = allLeads.filter(isInterviewRelevant);
+
+  const allTalkingPoints = new Set();
+  interviewLeads.forEach(l => {
+    if (l.related_data_needs && l.related_data_needs.length) {
+      l.related_data_needs.forEach(n => allTalkingPoints.add(n));
+    }
+  });
+  interviewLeads.forEach(l => allTalkingPoints.add(l.description));
+
+  const talkingPointsHtml = allTalkingPoints.size
+    ? `<ul class="talking-points">${[...allTalkingPoints].map(n => `<li>${n}</li>`).join('')}</ul>`
+    : '';
+
+  const bodyHtml = interviewLeads.length ? `
+    <div class="who-block">
+      <div class="who-block-label">ONE CONVERSATION, MULTIPLE OUTCOMES</div>
+      <p class="who-block-desc">A single interview with the right person, a family member, a knowledge-holder, a landowner, can resolve everything below at once. Personal information gathered directly is worth far more than the same facts pieced together secondhand from articles.</p>
+      <span class="bullseye-count">${allTalkingPoints.size} talking point${allTalkingPoints.size === 1 ? '' : 's'} this one visit could resolve</span>
+    </div>
+
+    <h2 class="section-title">What to cover</h2>
+    <p class="section-note">Check each off as it's covered. Write the actual answer on the line beneath, not just a checkmark, since that answer is what comes back into the system afterward.</p>
+    ${talkingPointsHtml}
+
+    <h2 class="section-title">Space for the conversation itself</h2>
+    <p class="section-note">Use this for anything that comes up that isn't already listed above. Real interviews go places a checklist doesn't anticipate.</p>
+    ${[1,2,3,4,5,6].map(() => `<div class="notes-line" style="margin-bottom:10px;"></div>`).join('')}
+  ` : `<p class="empty-note">No open items are currently interview-specific for this site. Check the general Field Research Packet instead for document-based leads.</p>`;
+
+  document.title = `Interview Mode - ${site.name}`;
+
+  document.getElementById('app').innerHTML = `
+    <h1>Interview Mode</h1>
+    <div class="meta-line">${site.name} - Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+
+    <div class="intro-note">
+      This is not a generic checklist. It's built specifically for one real conversation with a family, a landowner, or a knowledge-holder, gathering everything that conversation could genuinely resolve into a single script, rather than treating each fact as a separate errand.
+    </div>
+
+    <div class="toolbar">
+      <button onclick="window.print()">Print / Save as PDF</button>
+      <a class="secondary" href="field-packet.html?site=${siteId}">Full Field Packet</a>
+      <a class="secondary" href="site.html?site=${siteId}">Back to case study</a>
+    </div>
+
+    ${bodyHtml}
+  `;
+}
+
+renderInterviewPacket().catch(e => { console.error(e); renderEmpty('Something went wrong generating this packet.'); });
+</script>
+</body>
+</html>

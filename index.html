@@ -304,6 +304,15 @@
     font-style: italic;
     line-height: 1.5;
   }
+  .sidebar-note {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 4px 0 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .sidebar-note em { font-style: italic; }
   .sidebar-error {
     font-size: 0.85rem;
     color: var(--clay);
@@ -494,13 +503,35 @@ async function loadSites() {
     }
 
     container.innerHTML = '';
-    sites.forEach(s => {
+    const activeSites = sites.filter(s => !s.is_reference_case);
+    const referenceSites = sites.filter(s => s.is_reference_case);
+
+    activeSites.forEach(s => {
       const a = document.createElement('a');
-      a.className = 'site-link' + (s.is_reference_case ? ' site-link-reference' : '');
+      a.className = 'site-link';
       a.href = `site.html?site=${encodeURIComponent(s.site_id)}`;
       const region = [s.region, s.country].filter(Boolean).join(', ');
       a.innerHTML = `
-        ${s.is_reference_case ? '<span class="reference-tag">COMPLETE STUDY CASE</span>' : ''}
+        <div class="site-name">${escapeHtml(s.name)}</div>
+        ${region ? `<div class="site-region">${escapeHtml(region)}</div>` : ''}
+      `;
+      container.appendChild(a);
+    });
+
+    if (activeSites.length > 1) {
+      const note = document.createElement('p');
+      note.className = 'sidebar-note';
+      note.innerHTML = '<em>Why three Mi\'ilya entries? It depends on the actual research question: is the whole village the right unit, or specifically the olives, or specifically the winery, or genuinely both together? We track these as separate cases rather than guessing which framing is correct in advance.</em>';
+      container.appendChild(note);
+    }
+
+    referenceSites.forEach(s => {
+      const a = document.createElement('a');
+      a.className = 'site-link site-link-reference';
+      a.href = `site.html?site=${encodeURIComponent(s.site_id)}`;
+      const region = [s.region, s.country].filter(Boolean).join(', ');
+      a.innerHTML = `
+        <span class="reference-tag">COMPLETE STUDY CASE</span>
         <div class="site-name">${escapeHtml(s.name)}</div>
         ${region ? `<div class="site-region">${escapeHtml(region)}</div>` : ''}
       `;
