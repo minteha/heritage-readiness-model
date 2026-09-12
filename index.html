@@ -43,7 +43,9 @@
 
   /* ---------- Hero ---------- */
   .hero {
-    background: var(--ink);
+    background: linear-gradient(rgba(35,38,31,0.72), rgba(35,38,31,0.85)), url('miilya-olive-header.jpg');
+    background-size: cover;
+    background-position: center 30%;
     color: var(--stone);
     padding: 110px 0 90px;
     position: relative;
@@ -56,7 +58,7 @@
     top: -140px;
     width: 620px;
     height: 620px;
-    opacity: 0.16;
+    opacity: 0.06;
     z-index: 1;
   }
   .hero h1 {
@@ -164,6 +166,29 @@
     border-left: 3px solid var(--line);
     padding-left: 18px;
   }
+  .eligibility-note {
+    margin-top: 30px;
+    background: var(--stone-dim);
+    border-left: 4px solid var(--olive);
+    border-radius: 0 4px 4px 0;
+    padding: 20px 24px;
+  }
+  .eligibility-note h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.1rem;
+    margin: 0 0 10px;
+  }
+  .eligibility-note p {
+    font-size: 0.94rem;
+    color: var(--ink-soft);
+    margin: 0 0 10px;
+    max-width: 68ch;
+  }
+  .eligibility-note p:last-child { margin-bottom: 0; }
+  .eligibility-example {
+    color: var(--ink) !important;
+    font-style: italic;
+  }
 
   /* ---------- Stage spine ---------- */
   .spine { position: relative; margin-top: 10px; }
@@ -200,6 +225,7 @@
   .stage.extension .stage-num { border-color: var(--olive-deep); color: var(--olive-deep); }
   .stage-body h4 { margin: 5px 0 5px; font-size: 1.05rem; font-family: 'IBM Plex Sans', sans-serif; font-weight: 600; }
   .stage-body p { margin: 0; font-size: 0.93rem; color: var(--ink-soft); max-width: 62ch; }
+  .stage-example { font-size: 0.87rem !important; color: var(--olive-deep) !important; font-style: italic; margin-top: 6px !important; }
   .stage-tag {
     align-self: center;
     font-size: 0.74rem;
@@ -363,15 +389,15 @@
   <div class="wrap">
     <span class="tag">HERITAGE READINESS MODEL</span>
     <h1>Before you nominate, know what you actually have.</h1>
-    <p>A working assessment methodology for traditional orchards and agricultural landscapes, built directly from UNESCO's own governing conventions, not a checklist invented from scratch.</p>
-    <p>Pilot case study: the ancient olive orchards of Ma'alia.</p>
+    <p>A working assessment methodology for traditional orchards and agricultural landscapes. The sixteen stages are based on two key UNESCO documents, which are linked at the bottom of this page.</p>
+    <p>Pilot case study: the ancient olive orchards of Mi'ilya.</p>
   </div>
 </div>
 
 <section>
   <div class="wrap">
     <h2 class="section-title">Three paths, not one</h2>
-    <p class="kicker">"UNESCO recognition" is not a single process. This model covers two conventions and three practical routes, each with a genuinely different bar for what counts as enough.</p>
+    <p class="kicker">"UNESCO recognition" means different things depending on the path. This model covers two conventions and three practical routes, each with a genuinely different bar for what counts as enough.</p>
     <div class="paths">
       <div class="path-card wh">
         <span class="label">1972 CONVENTION</span>
@@ -386,7 +412,7 @@
       <div class="path-card ich-rep">
         <span class="label">2003 CONVENTION</span>
         <h3>ICH: Representative List</h3>
-        <p class="desc">Community-centered. Knowledge, skills, and practices, not the physical site itself.</p>
+        <p class="desc">Community-centered: the knowledge, skills, and practices themselves are what's protected, separate from any specific place.</p>
         <div class="gate">Satisfy ALL 5 of R.1–R.5</div>
         <div class="path-example">
           <span class="example-label">REAL EXAMPLE</span>
@@ -405,6 +431,11 @@
       </div>
     </div>
     <p class="scope-note">This model deliberately covers only these three routes. UNESCO Biosphere Reserves (Man and the Biosphere Programme) and the FAO's GIAHS designation are adjacent, genuinely relevant mechanisms, left out by choice, not oversight, because they don't follow this same individual, criteria-based nomination structure.</p>
+    <div class="eligibility-note">
+      <h3>Before choosing a path: check eligibility per convention, not per organization</h3>
+      <p>UNESCO membership and being a party to one of its specific conventions are two separate things. A state can remain fully active under one convention while not participating in another at all. This needs checking convention by convention, not assumed from a state's general UNESCO status.</p>
+      <p class="eligibility-example">Real example: Israel remains a fully active State Party to the 1972 World Heritage Convention, with real inscribed sites and current sessions. It does not currently appear as a party to the 2003 Intangible Cultural Heritage Convention specifically. For a site in Israel, this means the World Heritage path has no eligibility barrier at all, while the two ICH paths would need that separate convention to be ratified first.</p>
+    </div>
   </div>
 </section>
 
@@ -421,7 +452,7 @@
 <section>
   <div class="wrap">
     <h2 class="section-title">Grounded in the source documents</h2>
-    <p class="kicker">This page describes the model's stage structure, not the evidence gathered for any specific site. The "Official UNESCO requirement" tags shown throughout this framework trace to these two texts specifically, read directly. Evidence for individual sites (academic papers, interviews, official records) comes from many other sources across the project, cited on each site's own page.</p>
+    <p class="kicker">This page describes the model's stage structure specifically. Evidence gathered for individual sites, like academic papers, interviews, and official records, lives on each site's own page instead. The "Official UNESCO requirement" tags shown throughout this framework trace directly to the two texts below, read in full.</p>
     <div class="sources">
       <div class="source-card">
         <span class="year">WHC.25/01 · 16 July 2025</span>
@@ -458,6 +489,24 @@ const headers = {
 
 async function loadStages() {
   const container = document.getElementById('stage-spine');
+  const STAGE_EXAMPLE = {
+    0: 'Example: checking whether a practice is already in a national ICH inventory.',
+    1: 'Example: name, coordinates, and Tentative List status for the site.',
+    2: 'Example: a short summary of the site\'s history and physical setting.',
+    3: 'Example: choosing which World Heritage criterion, like (v), the site actually argues for.',
+    4: 'Example: tree age, system age, and continuity of use tracked as separate facts, not blended together.',
+    5: 'Example: does the boundary include the whole working landscape, or just isolated fields?',
+    6: 'Example: is the site still made of its original materials and form, not a modern reconstruction?',
+    7: 'Example: comparing a site against Battir, Lavaux, and Serra de Tramuntana.',
+    8: 'Example: has the community given consent, and how many people still practice the tradition?',
+    9: 'Example: rating each building or component as good, at risk, or gone.',
+    10: 'Example: a specific construction plan, with a real document date and figures.',
+    11: 'Example: a numbered law or directive that actually protects the site.',
+    12: 'Example: who is responsible for the site day to day, and what they\'ve committed to.',
+    13: 'Example: is anyone still making a living from the tradition today?',
+    14: 'Example: mapped core and buffer zones, with real coordinates.',
+    15: 'Example: a live summary of what is documented, what is missing, and what to do next.'
+  };
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/stages?select=*&order=stage_number.asc`, { headers });
     if (!res.ok) throw new Error('fetch failed');
@@ -473,6 +522,7 @@ async function loadStages() {
         <div class="stage-body">
           <h4>${s.name}</h4>
           <p>${s.description}</p>
+          ${STAGE_EXAMPLE[s.stage_number] ? `<p class="stage-example">${STAGE_EXAMPLE[s.stage_number]}</p>` : ''}
         </div>
         <div class="stage-tag">${isOfficial ? 'Official UNESCO' + (s.annex3_section ? ' · ' + s.annex3_section : '') : 'Tool Extension'}</div>
       `;
@@ -521,7 +571,7 @@ async function loadSites() {
     if (activeSites.length > 1) {
       const note = document.createElement('p');
       note.className = 'sidebar-note';
-      note.innerHTML = '<em>Why three Mi\'ilya entries? It depends on the actual research question: is the whole village the right unit, or specifically the olives, or specifically the winery, or genuinely both together? We track these as separate cases rather than guessing which framing is correct in advance.</em>';
+      note.innerHTML = '<em>Why three Mi\'ilya entries? It depends on the actual research question: is the whole village the right unit, or specifically the olives, or specifically the winery, or genuinely both together? We track these as three separate, real cases, and let the evidence decide which framing fits best.</em>';
       container.appendChild(note);
     }
 

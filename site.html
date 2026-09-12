@@ -47,7 +47,13 @@
   .topnav .brand { font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; color: #C9C3B2; }
 
   /* ---------- Hero ---------- */
-  .hero { background: var(--ink); color: var(--stone); padding: 40px 0 56px; }
+  .hero {
+    background: linear-gradient(rgba(35,38,31,0.72), rgba(35,38,31,0.85)), url('miilya-olive-header.jpg');
+    background-size: cover;
+    background-position: center 30%;
+    color: var(--stone);
+    padding: 40px 0 56px;
+  }
   .hero h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); color: var(--stone); margin: 6px 0 10px; }
   .hero .meta { font-size: 0.95rem; color: #C9C3B2; }
   .hero .desc { max-width: 68ch; color: #D8D3C4; margin-top: 14px; font-size: 1.02rem; }
@@ -588,7 +594,7 @@ async function renderSite() {
     ${site.is_reference_case ? `
     <div class="reference-banner">
       <div class="wrap">
-        <strong>This case is already decided.</strong> The percentages and stage details below show how much of the real record we've documented in our own system, not how "ready" this site is; it's already inscribed. Read this page for what it teaches, not as a live assessment in progress.
+        <strong>This case is already decided.</strong> The percentages and stage details below show how much of the real record we've documented in our own system. This site is already inscribed. Read this page for what it teaches about a successful case, not as a live assessment in progress.
       </div>
     </div>` : ''}
 
@@ -601,7 +607,7 @@ async function renderSite() {
     <section>
       <div class="wrap">
         <h2 class="section-title">Which path fits best?</h2>
-        <p class="kicker">Coverage shows how much of each path's question bank has evidence so far. Status is the actual verdict. A single failed gatekeeper (for example, missing community consent) overrides coverage entirely, so the highest percentage is not always the recommended path.</p>
+        <p class="kicker">Coverage shows how much of each path's question bank has evidence so far. Status is the actual verdict: a single failed gatekeeper (for example, missing community consent) overrides coverage entirely. The recommended path is the one with the best status, which sometimes has a lower percentage than another path.</p>
         <div class="paths">${pathCardsHtml}</div>
       </div>
     </section>
@@ -617,7 +623,7 @@ async function renderSite() {
     <section>
       <div class="wrap">
         <h2 class="section-title">Research leads</h2>
-        <p class="kicker">Real leads worth following up: a newspaper mention, an informal tip, that haven't been confirmed firsthand yet. These can point research in the right direction, but can never on their own mark an answer Ready. That requires verified evidence.</p>
+        <p class="kicker">Real leads worth following up: a newspaper mention, an informal tip. These point research in the right direction, but need direct confirmation before they count as real evidence.</p>
         ${leadsHtml}
       </div>
     </section>
@@ -625,7 +631,7 @@ async function renderSite() {
     <section>
       <div class="wrap">
         <h2 class="section-title">Sources to verify</h2>
-        <p class="kicker">Genuinely unread material, not yet extracted at all. Distinct from the leads above, which have at least been read. Nothing here is evidence of any kind until someone actually reads it.</p>
+        <p class="kicker">Genuinely unread material. Different from the leads above, which have at least been read once, these are sources someone still needs to open and check.</p>
         ${verifyHtml}
       </div>
     </section>

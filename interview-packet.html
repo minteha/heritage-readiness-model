@@ -16,6 +16,15 @@
     max-width: 780px; margin: 0 auto; padding: 40px 24px 80px;
   }
   h1 { font-family: 'Fraunces', serif; font-size: 1.9rem; margin: 0 0 4px; }
+  .packet-header {
+    background: linear-gradient(rgba(35,38,31,0.55), rgba(35,38,31,0.72)), url('miilya-olive-header.jpg');
+    background-size: cover;
+    background-position: center 30%;
+    margin: -40px -24px 28px;
+    padding: 40px 24px 24px;
+  }
+  .packet-header h1 { color: #fff; }
+  .packet-header .meta-line { color: #E8E4D8; margin-bottom: 0; }
   .meta-line { font-size: 0.9rem; color: var(--ink-soft); margin-bottom: 20px; }
   .intro-note {
     background: #F4F1E8; border-left: 4px solid var(--olive); padding: 14px 16px;
@@ -64,6 +73,11 @@
     .toolbar { display: none; }
     body { padding: 0 10px; max-width: 100%; }
     .who-block { border-color: #333; }
+    .packet-header {
+      background: none; margin: 0 0 20px; padding: 0; border-bottom: 2px solid #333;
+    }
+    .packet-header h1 { color: var(--ink); }
+    .packet-header .meta-line { color: var(--ink-soft); }
   }
 </style>
 </head>
@@ -130,22 +144,24 @@ async function renderInterviewPacket() {
     </div>
 
     <h2 class="section-title">What to cover</h2>
-    <p class="section-note">Check each off as it's covered. Write the actual answer on the line beneath, not just a checkmark, since that answer is what comes back into the system afterward.</p>
+    <p class="section-note">Check each off as it's covered, and write the actual answer on the line beneath. That answer is what comes back into the system afterward.</p>
     ${talkingPointsHtml}
 
     <h2 class="section-title">Space for the conversation itself</h2>
-    <p class="section-note">Use this for anything that comes up that isn't already listed above. Real interviews go places a checklist doesn't anticipate.</p>
+    <p class="section-note">Use this for anything that comes up beyond the list above. Real interviews often go places a checklist can't predict.</p>
     ${[1,2,3,4,5,6].map(() => `<div class="notes-line" style="margin-bottom:10px;"></div>`).join('')}
   ` : `<p class="empty-note">No open items are currently interview-specific for this site. Check the general Field Research Packet instead for document-based leads.</p>`;
 
   document.title = `Interview Mode - ${site.name}`;
 
   document.getElementById('app').innerHTML = `
-    <h1>Interview Mode</h1>
-    <div class="meta-line">${site.name} - Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+    <div class="packet-header">
+      <h1>Interview Mode</h1>
+      <div class="meta-line">${site.name} - Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+    </div>
 
     <div class="intro-note">
-      This is not a generic checklist. It's built specifically for one real conversation with a family, a landowner, or a knowledge-holder, gathering everything that conversation could genuinely resolve into a single script, rather than treating each fact as a separate errand.
+      Built for one real conversation with a family, a landowner, or a knowledge-holder, gathering everything that conversation could genuinely resolve into a single script.
     </div>
 
     <div class="toolbar">

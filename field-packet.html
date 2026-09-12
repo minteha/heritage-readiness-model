@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Field Research Packet — Heritage Readiness Model</title>
+<title>Field Research Packet - Heritage Readiness Model</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -16,6 +16,15 @@
     max-width: 780px; margin: 0 auto; padding: 40px 24px 80px;
   }
   h1 { font-family: 'Fraunces', serif; font-size: 1.9rem; margin: 0 0 4px; }
+  .packet-header {
+    background: linear-gradient(rgba(35,38,31,0.55), rgba(35,38,31,0.72)), url('miilya-olive-header.jpg');
+    background-size: cover;
+    background-position: center 30%;
+    margin: -40px -24px 28px;
+    padding: 40px 24px 24px;
+  }
+  .packet-header h1 { color: #fff; }
+  .packet-header .meta-line { color: #E8E4D8; margin-bottom: 0; }
   .meta-line { font-size: 0.9rem; color: var(--ink-soft); margin-bottom: 28px; }
   .toolbar {
     display: flex; gap: 12px; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--line);
@@ -57,6 +66,11 @@
     .toolbar { display: none; }
     body { padding: 0 10px; max-width: 100%; }
     .task-item, .stage-gap { border-color: #999; }
+    .packet-header {
+      background: none; margin: 0 0 20px; padding: 0; border-bottom: 2px solid #333;
+    }
+    .packet-header h1 { color: var(--ink); }
+    .packet-header .meta-line { color: var(--ink-soft); }
   }
 </style>
 </head>
@@ -119,7 +133,7 @@ async function renderPacket() {
       <div class="notes-line"></div>
       <div class="notes-line"></div>
     </div>
-  `).join('') : `<p class="empty-note">No open items to investigate right now — nothing to print for this section.</p>`;
+  `).join('') : `<p class="empty-note">No open items to investigate right now, nothing to print for this section.</p>`;
 
   // Fetch per-path stage gaps (stages with low/no coverage)
   const pathOrder = ['wh', 'ich_representative', 'ich_urgent'];
@@ -147,18 +161,20 @@ async function renderPacket() {
         <div class="stage-gap">
           <div class="stage-gap-name">${g.stage_name}</div>
           <p class="stage-gap-why">${descByStage[g.stage_number] || ''}</p>
-          <div class="stage-gap-data">${g.answered_questions} of ${g.total_questions} answered — ${g.coverage_pct}%</div>
+          <div class="stage-gap-data">${g.answered_questions} of ${g.total_questions} answered, ${g.coverage_pct}%</div>
           <div class="notes-label" style="margin-top:8px;">FINDINGS / NOTES:</div>
           <div class="notes-line"></div>
           <div class="notes-line"></div>
         </div>`).join('')}`;
   }).join('');
 
-  document.title = `Field Packet — ${site.name}`;
+  document.title = `Field Packet - ${site.name}`;
 
   document.getElementById('app').innerHTML = `
-    <h1>Field Research Packet</h1>
-    <div class="meta-line">${site.name} · Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+    <div class="packet-header">
+      <h1>Field Research Packet</h1>
+      <div class="meta-line">${site.name} · Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+    </div>
 
     <div class="toolbar">
       <button onclick="window.print()">Print / Save as PDF</button>
@@ -166,11 +182,11 @@ async function renderPacket() {
     </div>
 
     <h2 class="section-title">Open items to confirm</h2>
-    <p class="section-note">Sorted by priority. Each item includes what would confirm it, and — where one visit can resolve several things at once — everything else worth asking while you're there. Write findings directly below each item, then bring this back and share it.</p>
+    <p class="section-note">Sorted by priority. Each item includes what would confirm it, and, where one visit can resolve several things at once, everything else worth asking while you're there. Write findings directly below each item, then bring this back and share it.</p>
     ${tasksHtml}
 
     <h2 class="section-title">Stage-by-stage gaps, by path</h2>
-    <p class="section-note">Stages not yet marked Ready, across all three paths — a broader view than just the open leads above.</p>
+    <p class="section-note">Stages not yet marked Ready, across all three paths. This is a broader view than just the open leads above.</p>
     ${gapsHtml}
   `;
 }
