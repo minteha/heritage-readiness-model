@@ -102,6 +102,11 @@
   }
   .path-card:hover { box-shadow: 0 2px 10px rgba(35,38,31,0.08); }
   .path-card.recommended { border-top-color: var(--gold); background: #FBF3E2; }
+  .path-card.outcome-inscribed { border-top-color: var(--olive); background: #EEF1EA; }
+  .path-card.outcome-not-pursued { opacity: 0.6; }
+  .path-card .outcome-year { font-family: 'Fraunces', serif; font-size: 2.1rem; font-weight: 500; margin: 4px 0 0; color: var(--olive-deep); }
+  .outcome-badge-inscribed { background: rgba(107,122,94,0.2); color: var(--olive-deep); font-size: 0.76rem; font-family: 'IBM Plex Mono', monospace; padding: 3px 10px; border-radius: 3px; margin-top: 6px; }
+  .outcome-badge-not-pursued { background: rgba(35,38,31,0.08); color: var(--ink-soft); font-size: 0.76rem; font-family: 'IBM Plex Mono', monospace; padding: 3px 10px; border-radius: 3px; margin-top: 6px; }
   .path-card .label { font-size: 0.78rem; font-family: 'IBM Plex Mono', monospace; color: var(--ink-soft); }
   .path-card h3 { font-size: 1.1rem; margin: 0; }
   .path-card .pct { font-family: 'Fraunces', serif; font-size: 2.1rem; font-weight: 500; margin: 4px 0 0; }
@@ -135,6 +140,13 @@
   .next-steps-subtitle { font-size: 1.05rem; color: var(--ink-soft); max-width: 70ch; margin: 0 0 24px; }
   .readiness-block { border-width: 2px; }
   .readiness-summary { font-size: 1.05rem; color: var(--ink); margin: 0 0 16px; line-height: 1.7; }
+  .checklist-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--ink-soft); letter-spacing: 0.03em; margin-bottom: 8px; }
+  .quick-checklist { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 4px 16px; margin-bottom: 18px; }
+  .checklist-row { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; padding: 3px 0; }
+  .checklist-row .check-mark { font-weight: 700; width: 16px; text-align: center; }
+  .checklist-row.check-yes .check-mark { color: var(--olive-deep); }
+  .checklist-row.check-no .check-mark { color: var(--ink-soft); opacity: 0.5; }
+  .checklist-row.check-no .check-name { color: var(--ink-soft); }
   .readiness-label {
     font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--ink-soft);
     letter-spacing: 0.03em; margin-bottom: 8px;
@@ -339,15 +351,34 @@ async function renderSite() {
   const pathOrder = ['wh', 'ich_representative', 'ich_urgent'];
   const sortedPaths = pathOrder.map(id => pathComparison.find(p => p.criteria_list_id === id)).filter(Boolean);
   const SHORT_PATH_LABEL = { wh: 'World Heritage', ich_representative: 'ICH Representative', ich_urgent: 'ICH Urgent Safeguarding' };
-  const pathCardsHtml = sortedPaths.map(p => `
+  const pathCardsHtml = sortedPaths.map(p => {
+    if (p.real_outcome === 'inscribed') {
+      return `
+    <a class="path-card path-card-outcome outcome-inscribed" href="path.html?site=${siteId}&path=${p.criteria_list_id}">
+      <span class="recommended-tag">CHOSEN</span>
+      <span class="label">${p.track_id === 'world_heritage' ? '1972 CONVENTION' : '2003 CONVENTION'}</span>
+      <h3>${SHORT_PATH_LABEL[p.criteria_list_id] || p.path_name}</h3>
+      <div class="outcome-year">${p.outcome_year || ''}</div>
+      <span class="status-badge outcome-badge-inscribed">Evidence Used</span>
+    </a>`;
+    }
+    if (p.real_outcome === 'not_pursued') {
+      return `
+    <a class="path-card path-card-outcome outcome-not-pursued" href="path.html?site=${siteId}&path=${p.criteria_list_id}">
+      <span class="label">${p.track_id === 'world_heritage' ? '1972 CONVENTION' : '2003 CONVENTION'}</span>
+      <h3>${SHORT_PATH_LABEL[p.criteria_list_id] || p.path_name}</h3>
+      <span class="status-badge outcome-badge-not-pursued">Not Pursued</span>
+    </a>`;
+    }
+    return `
     <a class="path-card ${p.is_recommended ? 'recommended' : ''}" href="path.html?site=${siteId}&path=${p.criteria_list_id}">
       ${p.is_recommended ? '<span class="recommended-tag">RECOMMENDED</span>' : ''}
       <span class="label">${p.track_id === 'world_heritage' ? '1972 CONVENTION' : '2003 CONVENTION'}</span>
       <h3>${SHORT_PATH_LABEL[p.criteria_list_id] || p.path_name}</h3>
       <div class="pct">${p.coverage_pct}%</div>
       <span class="status-badge status-${p.overall_status}">${STATUS_LABEL[p.overall_status] || p.overall_status}</span>
-    </a>
-  `).join('');
+    </a>`;
+  }).join('');
 
   // ---- Readiness summary: what we have / what's missing / recommendation,
   // plus which stages apply to this path and why, and what data exists for
@@ -400,23 +431,91 @@ async function renderSite() {
     }).join('');
   };
 
+  // Builds a real, data-grounded summary from the actual stage numbers when
+  // no one has written assessment_feedback yet for this path. Every number
+  // and stage name here comes directly from stageStatusByAssessment, nothing
+  // is invented. This is deliberately template-based, not a live AI call --
+  // a static site has no backend to call one from, and a deterministic
+  // summary from real numbers is more trustworthy than a plausible-sounding
+  // guess anyway.
+  const generateAutoSummary = assessmentId => {
+    const rows = stageStatusByAssessment[assessmentId] || [];
+    if (!rows.length) return null;
+    const ready = rows.filter(r => r.stage_status === 'ready');
+    const started = rows.filter(r => r.stage_status !== 'ready' && r.stage_status !== 'not_started' && Number(r.coverage_pct) > 0);
+    const untouched = rows.filter(r => r.stage_status === 'not_started' || Number(r.coverage_pct) === 0);
+    const totalAnswered = rows.reduce((s, r) => s + Number(r.answered_questions), 0);
+    const totalQuestions = rows.reduce((s, r) => s + Number(r.total_questions), 0);
+
+    let text = `No written recommendation exists yet for this path, so here is what the underlying data actually shows: ${totalAnswered} of ${totalQuestions} questions answered across ${rows.length} stages. `;
+    if (ready.length) {
+      text += `Fully documented: ${ready.map(r => r.stage_name).join(', ')}. `;
+    }
+    if (untouched.length) {
+      text += `Not started at all: ${untouched.map(r => r.stage_name).join(', ')}. `;
+    }
+    if (started.length) {
+      text += `Partially documented: ${started.map(r => r.stage_name).join(', ')}.`;
+    }
+    return text.trim();
+  };
+
+  // A quick-glance checklist for the top of each readiness block: one line
+  // per stage, checkmark if it's genuinely Ready, X otherwise. This sits
+  // above the detailed collapsible list, not instead of it.
+  const renderChecklist = assessmentId => {
+    const rows = stageStatusByAssessment[assessmentId] || [];
+    if (!rows.length) return '';
+    return `<div class="quick-checklist">${rows.map(r => `
+      <div class="checklist-row ${r.stage_status === 'ready' ? 'check-yes' : 'check-no'}">
+        <span class="check-mark">${r.stage_status === 'ready' ? '✓' : '✗'}</span>
+        <span class="check-name">${r.stage_name}</span>
+      </div>`).join('')}</div>`;
+  };
+
   const readinessHtml = sortedPaths.map(p => {
     const fb = feedbackByAssessment[p.assessment_id];
-    return `
-      <div class="readiness-block readiness-${p.criteria_list_id} ${p.is_recommended ? 'recommended' : ''}">
+    const isInscribed = p.real_outcome === 'inscribed';
+    const isNotPursued = p.real_outcome === 'not_pursued';
+    let badgeHtml;
+    if (isInscribed) {
+      badgeHtml = `<span class="status-badge outcome-badge-inscribed">Evidence Used, ${p.outcome_year}</span>`;
+    } else if (isNotPursued) {
+      badgeHtml = `<span class="status-badge outcome-badge-not-pursued">Not Pursued</span>`;
+    } else {
+      badgeHtml = `<span class="status-badge status-${p.overall_status}">${STATUS_LABEL[p.overall_status] || p.overall_status}</span>`;
+    }
+    if (isNotPursued) {
+      return `
+      <div class="readiness-block readiness-${p.criteria_list_id}">
         <div class="readiness-head">
           <h3>${SHORT_PATH_LABEL[p.criteria_list_id] || p.path_name}</h3>
-          <span class="status-badge status-${p.overall_status}">${STATUS_LABEL[p.overall_status] || p.overall_status}</span>
+          ${badgeHtml}
         </div>
+        <p class="readiness-summary">${p.outcome_note || 'This path was not used for this case.'}</p>
+      </div>`;
+    }
+    return `
+      <div class="readiness-block readiness-${p.criteria_list_id} ${p.is_recommended ? 'recommended' : ''} ${isInscribed ? 'outcome-inscribed' : ''}">
+        <div class="readiness-head">
+          <h3>${SHORT_PATH_LABEL[p.criteria_list_id] || p.path_name}</h3>
+          ${badgeHtml}
+        </div>
+        <div class="checklist-label">WHAT WE HAVE, AT A GLANCE</div>
+        ${renderChecklist(p.assessment_id)}
         ${fb ? `
+          <div class="readiness-label">SUMMARY</div>
           <p class="readiness-summary">${fb.feedback_text}</p>
           ${fb.next_actions && fb.next_actions.length ? `
-            <div class="readiness-label">RECOMMENDATION: WHAT TO DO NEXT</div>
+            <div class="readiness-label">${isInscribed ? 'WHAT THIS TEACHES US FOR MI\u2019ILYA' : 'RECOMMENDATION: WHAT TO DO NEXT'}</div>
             <ul class="readiness-actions">${fb.next_actions.map(a => `<li>${a}</li>`).join('')}</ul>
           ` : ''}
-        ` : `<p class="qa-empty">No summary generated yet for this path.</p>`}
+        ` : `
+          <div class="readiness-label">SUMMARY (AUTO-GENERATED FROM STAGE DATA)</div>
+          <p class="readiness-summary">${generateAutoSummary(p.assessment_id) || 'No stage data exists yet for this path.'}</p>
+        `}
         <details class="stage-details">
-          <summary>Which stages apply to this path, and why</summary>
+          <summary>${isInscribed ? 'Which stages this path actually leaned on, and why (closed evidence)' : 'Which stages apply to this path, and why'}</summary>
           <div class="stage-list">${renderStageList(p.assessment_id)}</div>
         </details>
         <a class="readiness-link" href="path.html?site=${siteId}&path=${p.criteria_list_id}">See full assessment →</a>
@@ -607,8 +706,14 @@ async function renderSite() {
 
     <section>
       <div class="wrap">
+        ${site.is_reference_case ? (() => {
+          const inscribedPath = sortedPaths.find(p => p.real_outcome === 'inscribed');
+          return `
+        <h2 class="section-title">Which path was chosen, and why it worked</h2>
+        <p class="kicker">${inscribedPath ? `${SHORT_PATH_LABEL[inscribedPath.criteria_list_id] || inscribedPath.path_name} was the path actually used, inscribed in ${inscribedPath.outcome_year}. ${inscribedPath.outcome_note || ''}` : 'No path has been inscribed yet for this case.'}</p>`;
+        })() : `
         <h2 class="section-title">Which path fits best?</h2>
-        <p class="kicker">Coverage shows how much of each path's question bank has evidence so far. Status is the actual verdict: a single failed gatekeeper (for example, missing community consent) overrides coverage entirely. The recommended path is the one with the best status, which sometimes has a lower percentage than another path.</p>
+        <p class="kicker">Coverage shows how much of each path's question bank has evidence so far. Status is the actual verdict: a single failed gatekeeper (for example, missing community consent) overrides coverage entirely. The recommended path is the one with the best status, which sometimes has a lower percentage than another path.</p>`}
         <div class="paths">${pathCardsHtml}</div>
       </div>
     </section>

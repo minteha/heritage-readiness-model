@@ -59,13 +59,14 @@
   }
   .talking-points { margin: 8px 0; padding-left: 0; list-style: none; }
   .talking-points li {
-    font-size: 0.9rem; margin-bottom: 10px; padding-left: 24px; position: relative; line-height: 1.4;
+    font-size: 0.9rem; margin-bottom: 18px; padding-left: 24px; position: relative; line-height: 1.4;
   }
   .talking-points li::before {
     content: ''; position: absolute; left: 0; top: 2px; width: 14px; height: 14px;
     border: 1.5px solid var(--ink); border-radius: 2px;
   }
-  .notes-line { border-bottom: 1px solid var(--line); height: 26px; margin-top: 4px; }
+  .notes-line { border-bottom: 1px solid var(--line); height: 34px; margin-top: 4px; }
+  .mini-notes-line { border-bottom: 1px solid var(--line); height: 24px; margin: 6px 0 0 0; }
   .notes-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; color: var(--ink-soft); margin-top: 10px; }
   .empty-note { font-size: 0.88rem; color: var(--ink-soft); font-style: italic; }
 
@@ -133,7 +134,7 @@ async function renderInterviewPacket() {
   interviewLeads.forEach(l => allTalkingPoints.add(l.description));
 
   const talkingPointsHtml = allTalkingPoints.size
-    ? `<ul class="talking-points">${[...allTalkingPoints].map(n => `<li>${n}</li>`).join('')}</ul>`
+    ? `<ul class="talking-points">${[...allTalkingPoints].map(n => `<li>${n}<div class="mini-notes-line"></div><div class="mini-notes-line"></div></li>`).join('')}</ul>`
     : '';
 
   const bodyHtml = interviewLeads.length ? `
@@ -149,7 +150,7 @@ async function renderInterviewPacket() {
 
     <h2 class="section-title">Space for the conversation itself</h2>
     <p class="section-note">Use this for anything that comes up beyond the list above. Real interviews often go places a checklist can't predict.</p>
-    ${[1,2,3,4,5,6].map(() => `<div class="notes-line" style="margin-bottom:10px;"></div>`).join('')}
+    ${[1,2,3,4,5,6,7,8,9,10,11,12].map(() => `<div class="notes-line" style="margin-bottom:10px;"></div>`).join('')}
   ` : `<p class="empty-note">No open items are currently interview-specific for this site. Check the general Field Research Packet instead for document-based leads.</p>`;
 
   document.title = `Interview Mode - ${site.name}`;
