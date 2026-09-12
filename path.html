@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Heritage Readiness Model — Path</title>
+<title>Heritage Readiness Model - Path</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -85,6 +85,22 @@
   .stage-block { margin-bottom: 40px; }
   .stage-block h3 { font-size: 1.2rem; margin: 0 0 6px; }
   .stage-block .stage-desc { font-size: 0.9rem; color: var(--ink-soft); margin-bottom: 16px; max-width: 66ch; }
+  .stage-example { font-size: 0.85rem; color: var(--olive-deep); font-style: italic; margin: -8px 0 16px; }
+  .scope-tag { font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem; color: var(--ink-soft); font-weight: 500; background: var(--stone-dim); padding: 2px 7px; border-radius: 3px; vertical-align: middle; margin-left: 6px; }
+  .quick-checklist { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 4px 16px; margin-bottom: 18px; }
+  .checklist-row { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; padding: 3px 0; }
+  .checklist-row .check-mark { font-weight: 700; width: 16px; text-align: center; }
+  .checklist-row.check-yes .check-mark { color: var(--olive-deep); }
+  .checklist-row.check-no .check-mark { color: var(--ink-soft); opacity: 0.5; }
+  .checklist-row.check-no .check-name { color: var(--ink-soft); }
+  .checklist-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--ink-soft); letter-spacing: 0.03em; margin-bottom: 8px; }
+  .pending-review-tag {
+    display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; font-weight: 600;
+    color: var(--gold); border: 1px solid var(--gold); padding: 2px 8px; border-radius: 3px; margin-bottom: 6px;
+  }
+  .pending-review-row { border-left-color: var(--gold) !important; background: #FBF3E2; }
+  .outcome-badge-inscribed { background: rgba(107,122,94,0.25); color: #B7C6A9; }
+  .outcome-badge-not-pursued { background: rgba(255,255,255,0.08); color: #C9C3B2; }
   .qa-row { border-bottom: 1px solid var(--line); padding: 14px 0; }
   .qa-row:last-child { border-bottom: none; }
   .qa-prompt { font-size: 0.94rem; font-weight: 500; margin-bottom: 4px; }
@@ -204,17 +220,28 @@ async function renderPath() {
   const pathInfo = thisPath[0];
   const trackId = pathInfo.track_id;
 
-  document.title = `${site.name} — ${pathInfo.path_name} — Heritage Readiness Model`;
+  document.title = `${site.name} - ${pathInfo.path_name} - Heritage Readiness Model`;
 
-  const [stages, allCriteria, claimedCriteria, assessmentAnswers, comparisons, allCaseStudies, feedback] = await Promise.all([
+  const [stages, allCriteria, claimedCriteria, assessmentAnswers, comparisons, allCaseStudies, feedback, siteStages, siteAnswers, allStages, stageStatus, unanswered, evidenceList, researchLeads] = await Promise.all([
     api(`stages?scope=eq.path&order=stage_number.asc`),
     api(`criteria?list_id=eq.${pathId}&order=sort_order.asc`),
     api(`assessment_criteria?assessment_id=eq.${pathInfo.assessment_id}&select=*`),
     api(`assessment_answers?assessment_id=eq.${pathInfo.assessment_id}&select=*,assessment_questions(prompt,stage_number,question_type),evidence_records(description,source_citation,verification_tier)`),
     api(`assessment_comparisons?assessment_id=eq.${pathInfo.assessment_id}&select=*,case_studies(name,key_lesson)`),
     api(`case_studies?track_id=eq.${trackId}&select=*`),
-    api(`assessment_feedback?assessment_id=eq.${pathInfo.assessment_id}&is_current=eq.true&select=*`)
+    api(`assessment_feedback?assessment_id=eq.${pathInfo.assessment_id}&is_current=eq.true&select=*`),
+    api(`stages?scope=eq.site&order=stage_number.asc`),
+    api(`site_answers?site_id=eq.${siteId}&select=*,assessment_questions(prompt,stage_number,question_type),evidence_records(description,source_citation,verification_tier)`),
+    api(`stages?select=stage_number,name,description,scope,source_type&order=stage_number.asc`),
+    api(`assessment_stage_status?assessment_id=eq.${pathInfo.assessment_id}&select=*&order=stage_number.asc`),
+    api(`site_unanswered_questions?site_id=eq.${siteId}&select=*`),
+    api(`site_evidence_list?site_id=eq.${siteId}&select=*`),
+    api(`research_leads?site_id=eq.${siteId}&status=eq.open&select=*,stages(name)&order=priority.asc`)
   ]);
+  const stageInfoByNumber = {};
+  allStages.forEach(s => { stageInfoByNumber[s.stage_number] = s; });
+  const isInscribed = pathInfo.real_outcome === 'inscribed';
+  const isNotPursued = pathInfo.real_outcome === 'not_pursued';
 
   // ---- Tab switcher ----
   const pathOrder = ['wh', 'ich_representative', 'ich_urgent'];
@@ -227,8 +254,77 @@ async function renderPath() {
     </a>`;
   }).join('');
 
-  // ---- Stages applicable to this track ----
+  // ---- Stages applicable to this track (path-scoped) plus all site-scoped
+  // stages, since those genuinely affect this path's real status too, and
+  // were previously invisible on this page entirely.
   const applicableStages = stages.filter(st => st.track_applicability === 'both' || st.track_applicability === trackId);
+
+  const STAGE_EXAMPLE = {
+    0: 'Example: checking whether a practice is already in a national ICH inventory.',
+    1: 'Example: name, coordinates, and Tentative List status for the site.',
+    2: 'Example: a short summary of the site\'s history and physical setting.',
+    3: 'Example: choosing which World Heritage criterion, like (v), the site actually argues for.',
+    4: 'Example: tree age, system age, and continuity of use tracked as separate facts, not blended together.',
+    5: 'Example: does the boundary include the whole working landscape, or just isolated fields?',
+    6: 'Example: is the site still made of its original materials and form, not a modern reconstruction?',
+    7: 'Example: comparing against Battir, Lavaux, and Serra de Tramuntana.',
+    8: 'Example: has the community given consent, and how many people still practice the tradition?',
+    9: 'Example: rating each building or component as good, at risk, or gone.',
+    10: 'Example: a specific construction plan, with a real document date and figures.',
+    11: 'Example: a numbered law or directive that actually protects the site.',
+    12: 'Example: who is responsible for the site day to day, and what they\'ve committed to.',
+    13: 'Example: is anyone still making a living from the tradition today?',
+    14: 'Example: mapped core and buffer zones, with real coordinates.',
+    15: 'Example: a live summary of what is documented, what is missing, and what to do next.'
+  };
+
+  const generateAutoSummary = () => {
+    const rows = stageStatus || [];
+    if (!rows.length) return null;
+    const ready = rows.filter(r => r.stage_status === 'ready');
+    const started = rows.filter(r => r.stage_status !== 'ready' && r.stage_status !== 'not_started' && Number(r.coverage_pct) > 0);
+    const untouched = rows.filter(r => r.stage_status === 'not_started' || Number(r.coverage_pct) === 0);
+    const totalAnswered = rows.reduce((s, r) => s + Number(r.answered_questions), 0);
+    const totalQuestions = rows.reduce((s, r) => s + Number(r.total_questions), 0);
+    let text = `No written recommendation exists yet for this path, so here is what the underlying data actually shows: ${totalAnswered} of ${totalQuestions} questions answered across ${rows.length} stages. `;
+    if (ready.length) text += `Fully documented: ${ready.map(r => r.stage_name).join(', ')}. `;
+    if (untouched.length) text += `Not started at all: ${untouched.map(r => r.stage_name).join(', ')}. `;
+    if (started.length) text += `Partially documented: ${started.map(r => r.stage_name).join(', ')}.`;
+    return text.trim();
+  };
+
+  const renderChecklist = () => {
+    const rows = stageStatus || [];
+    if (!rows.length) return '';
+    return `<div class="quick-checklist">${rows.map(r => `
+      <div class="checklist-row ${r.stage_status === 'ready' ? 'check-yes' : 'check-no'}">
+        <span class="check-mark">${r.stage_status === 'ready' ? '\u2713' : '\u2717'}</span>
+        <span class="check-name">${r.stage_name}</span>
+      </div>`).join('')}</div>`;
+  };
+
+  const renderSourcePointer = p => {
+    if (!p) return '';
+    const isUrl = /^https?:\/\//i.test(p);
+    return isUrl ? `<a href="${p}" target="_blank" rel="noopener">${p}</a>` : p;
+  };
+  const openLeadsHtml = researchLeads.length
+    ? `<div class="comparator-list">${researchLeads.map(l => `
+        <div class="comparator-row ${l.is_pending_review ? 'pending-review-row' : ''}">
+          ${l.is_pending_review ? `<span class="pending-review-tag">PENDING REVIEW, SUBMITTED BY ${(l.submitted_by || 'UNKNOWN').toUpperCase()}</span>` : ''}
+          <div class="name">${l.description}</div>
+          <div class="lesson">${l.stages ? l.stages.name : 'General'}${l.source_pointer ? ' &middot; ' + renderSourcePointer(l.source_pointer) : ''}</div>
+        </div>`).join('')}</div>`
+    : `<p class="qa-empty">No open research leads right now.</p>`;
+
+  const evidenceListHtml = evidenceList && evidenceList.length
+    ? `<div class="comparator-list">${evidenceList.map(e => `
+        <div class="comparator-row">
+          <div class="name">${e.file_reference ? `<a href="${e.file_reference}" target="_blank" rel="noopener">${e.source_citation || e.description}</a>` : (e.source_citation || e.description)}</div>
+          <div class="lesson">${e.description}</div>
+          <span class="tier-tag tier-${e.verification_tier}">${(e.verification_tier || '').toUpperCase()}</span>
+        </div>`).join('')}</div>`
+    : `<p class="qa-empty">No evidence recorded yet for this site.</p>`;
 
   const claimedIds = new Set(claimedCriteria.map(c => c.criterion_id));
   const criteriaHtml = allCriteria.map(c => {
@@ -248,6 +344,10 @@ async function renderPath() {
     const sn = a.assessment_questions.stage_number;
     (answersByStage[sn] = answersByStage[sn] || []).push(a);
   });
+  siteAnswers.forEach(a => {
+    const sn = a.assessment_questions.stage_number;
+    (answersByStage[sn] = answersByStage[sn] || []).push(a);
+  });
 
   const statusColor = s => ({ ready: 'var(--olive)', needs_evidence: 'var(--gold)', major_gap: 'var(--clay)', critical_gap: 'var(--alert)' }[s] || 'var(--line)');
 
@@ -257,7 +357,12 @@ async function renderPath() {
       ${e.source_citation || e.description}
     </span>`;
 
-  const stagesHtml = applicableStages.filter(st => st.stage_number !== 3 && st.stage_number !== 7).map(st => {
+  // Combine path-scoped stages (applicable to this track) with all
+  // site-scoped stages, since site-level facts genuinely affect this
+  // path's real status and were previously invisible on this page.
+  const allApplicableStages = [...applicableStages, ...siteStages].sort((a, b) => a.stage_number - b.stage_number);
+
+  const stagesHtml = allApplicableStages.filter(st => st.stage_number !== 3 && st.stage_number !== 7).map(st => {
     const answers = answersByStage[st.stage_number] || [];
     const rows = answers.length
       ? answers.map(a => `
@@ -267,8 +372,14 @@ async function renderPath() {
             ${a.evidence_records && a.evidence_records.length ? `<div class="evidence-list">${a.evidence_records.map(renderEvidenceItem).join('')}</div>` : ''}
           </div>`).join('')
       : `<p class="qa-empty">Not yet assessed.</p>`;
-    return `<div class="stage-block"><h3>${st.name}</h3><p class="stage-desc">${st.description}</p>${rows}</div>`;
+    return `<div class="stage-block">
+      <h3>${st.name} <span class="scope-tag">${st.scope === 'site' ? 'SITE-WIDE' : 'PATH-SPECIFIC'}</span></h3>
+      <p class="stage-desc">${st.description}</p>
+      ${STAGE_EXAMPLE[st.stage_number] ? `<p class="stage-example">${STAGE_EXAMPLE[st.stage_number]}</p>` : ''}
+      ${rows}
+    </div>`;
   }).join('');
+
 
   // ---- Research Leads: path-specific leads, gathered into one visible
   // to-do list rather than left buried inside individual stage blocks.
@@ -304,13 +415,20 @@ async function renderPath() {
         </div>`).join('')}</div>`;
 
   // ---- Feedback ----
-  const feedbackHtml = feedback.length
-    ? `<div class="feedback-box">
-        <div class="generated">Generated ${new Date(feedback[0].generated_at).toLocaleDateString()}</div>
-        <div class="text">${feedback[0].feedback_text}</div>
-        ${feedback[0].next_actions && feedback[0].next_actions.length ? `<ul class="next-actions">${feedback[0].next_actions.map(a => `<li>${a}</li>`).join('')}</ul>` : ''}
-      </div>`
-    : `<p class="qa-empty">No feedback generated yet for this path. Feedback is written once new evidence has been reviewed and approved.</p>`;
+  const feedbackHtml = isNotPursued
+    ? `<p class="qa-empty">${pathInfo.outcome_note || 'This path was not used for this case.'}</p>`
+    : (feedback.length
+      ? `<div class="feedback-box">
+          <div class="generated">${isInscribed ? 'Already inscribed' : 'Generated ' + new Date(feedback[0].generated_at).toLocaleDateString()}</div>
+          <div class="text">${feedback[0].feedback_text}</div>
+          ${feedback[0].next_actions && feedback[0].next_actions.length ? `
+            <div class="checklist-label" style="margin-top:16px;">${isInscribed ? 'WHAT THIS TEACHES US FOR MI\u2019ILYA' : 'RECOMMENDATION: WHAT TO DO NEXT'}</div>
+            <ul class="next-actions">${feedback[0].next_actions.map(a => `<li>${a}</li>`).join('')}</ul>` : ''}
+        </div>`
+      : `<div class="feedback-box">
+          <div class="generated">Auto-generated from stage data</div>
+          <div class="text">${generateAutoSummary() || 'No stage data exists yet for this path.'}</div>
+        </div>`);
 
   const gatekeeperAlert = pathInfo.failed_gatekeepers > 0 ? `
     <div class="gatekeeper-alert">
@@ -318,7 +436,7 @@ async function renderPath() {
         <span class="icon">⚠</span>
         <div>
           <strong>${pathInfo.failed_gatekeepers} gatekeeper requirement${pathInfo.failed_gatekeepers > 1 ? 's' : ''} not met.</strong>
-          <p>This path cannot be marked Ready regardless of coverage elsewhere — a gatekeeper failure is decisive on its own.</p>
+          <p>This path cannot be marked Ready regardless of coverage elsewhere. A gatekeeper failure is decisive on its own.</p>
         </div>
       </div>
     </div>` : '';
@@ -331,8 +449,8 @@ async function renderPath() {
         <h1>${pathInfo.path_name}</h1>
         <div class="sitename">${site.name}</div>
         <div class="hero-stats">
-          <div class="hero-pct">${pathInfo.coverage_pct}%</div>
-          <span class="hero-status-badge status-${pathInfo.overall_status}">${STATUS_LABEL[pathInfo.overall_status] || pathInfo.overall_status}</span>
+          <div class="hero-pct">${isInscribed ? pathInfo.outcome_year : pathInfo.coverage_pct + '%'}</div>
+          <span class="hero-status-badge ${isInscribed ? 'outcome-badge-inscribed' : (isNotPursued ? 'outcome-badge-not-pursued' : 'status-' + pathInfo.overall_status)}">${isInscribed ? 'Evidence Used' : (isNotPursued ? 'Not Pursued' : (STATUS_LABEL[pathInfo.overall_status] || pathInfo.overall_status))}</span>
         </div>
       </div>
     </div>
@@ -341,7 +459,7 @@ async function renderPath() {
     <section>
       <div class="wrap">
         <h2 class="section-title">Criteria</h2>
-        <span class="satisfaction-note">${pathInfo.satisfaction_rule === 'all_required' ? 'Every criterion below must be satisfied — no partial credit' : 'At least one criterion below must be satisfied'}</span>
+        <span class="satisfaction-note">${pathInfo.satisfaction_rule === 'all_required' ? 'Every criterion below must be satisfied, no partial credit' : 'At least one criterion below must be satisfied'}</span>
         ${criteriaHtml}
       </div>
     </section>
@@ -349,7 +467,9 @@ async function renderPath() {
     <section class="alt">
       <div class="wrap">
         <h2 class="section-title">Assessment</h2>
-        <p class="kicker">Path-specific evidence for ${pathInfo.path_name.split('(')[0].trim()}.</p>
+        <p class="kicker">Every stage that genuinely affects this path, site-wide facts and path-specific evidence together.</p>
+        <div class="checklist-label">WHAT WE HAVE, AT A GLANCE</div>
+        ${renderChecklist()}
         ${stagesHtml}
       </div>
     </section>
@@ -371,8 +491,24 @@ async function renderPath() {
     <section>
       <div class="wrap">
         <h2 class="section-title">Research leads</h2>
-        <p class="kicker">Real leads specific to this path — not yet confirmed firsthand, but worth following up. A lead can never on its own mark an answer Ready; that requires verified evidence.</p>
+        <p class="kicker">Real leads worth following up, from across the whole site. These point research in the right direction, but need direct confirmation before they count as real evidence.</p>
+        ${openLeadsHtml}
+      </div>
+    </section>
+
+    <section class="alt">
+      <div class="wrap">
+        <h2 class="section-title">Unverified evidence tied to this path's own answers</h2>
+        <p class="kicker">Specific sources cited directly against this path's questions, not yet confirmed firsthand.</p>
         ${leadsHtml}
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2 class="section-title">Evidence &amp; sources</h2>
+        <p class="kicker">Every real citation behind this case study, in one place. Click through to the original where a link exists.</p>
+        ${evidenceListHtml}
       </div>
     </section>
   `;
