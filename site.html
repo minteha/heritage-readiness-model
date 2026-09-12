@@ -248,6 +248,18 @@
     padding: 8px 10px; border-radius: 3px;
   }
   .confirm-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--olive-deep); font-weight: 600; margin-right: 6px; }
+  .pending-review-row { border-left-color: var(--gold) !important; background: #FBF3E2; }
+  .pending-review-tag {
+    display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; font-weight: 600;
+    color: var(--gold); border: 1px solid var(--gold); padding: 2px 8px; border-radius: 3px; margin-bottom: 6px;
+  }
+  .pasted-content-box {
+    margin-top: 8px; padding: 12px 14px; background: #fff; border: 1px solid var(--line); border-radius: 4px;
+    font-size: 0.85rem; white-space: pre-wrap; max-height: 300px; overflow-y: auto; line-height: 1.5;
+  }
+  .evidence-list-item { border: 1px solid var(--line); border-radius: 4px; padding: 12px 16px; margin-bottom: 10px; }
+  .evidence-list-item .name a { color: var(--ink); }
+  .evidence-list-item .sub { font-size: 0.82rem; color: var(--ink-soft); margin-top: 3px; }
   .related-details { margin-top: 8px; }
   .related-details summary { cursor: pointer; font-size: 0.82rem; color: var(--slate); font-weight: 500; }
   .related-needs { margin: 8px 0 0; padding-left: 20px; }
@@ -334,7 +346,7 @@ async function renderSite() {
 
   document.title = `${site.name} - Heritage Readiness Model`;
 
-  const [pathComparison, stages, siteAnswers, components, threats, mapFeatures, researchLeads, allStages] = await Promise.all([
+  const [pathComparison, stages, siteAnswers, components, threats, mapFeatures, researchLeads, allStages, siteEvidenceList] = await Promise.all([
     api(`site_path_comparison?site_id=eq.${siteId}&select=*`),
     api(`stages?scope=eq.site&order=stage_number.asc`),
     api(`site_answers?site_id=eq.${siteId}&select=*,assessment_questions(prompt,stage_number,question_type),evidence_records(description,source_citation,verification_tier,file_reference)`),
@@ -342,7 +354,8 @@ async function renderSite() {
     api(`threats?site_id=eq.${siteId}&select=*`),
     api(`map_features?site_id=eq.${siteId}&select=*`),
     api(`research_leads?site_id=eq.${siteId}&status=eq.open&select=*,stages(name)&order=priority.asc`),
-    api(`stages?select=stage_number,name,description,scope,source_type&order=stage_number.asc`)
+    api(`stages?select=stage_number,name,description,scope,source_type&order=stage_number.asc`),
+    api(`site_evidence_list?site_id=eq.${siteId}&select=*`)
   ]);
   const stageInfoByNumber = {};
   allStages.forEach(s => { stageInfoByNumber[s.stage_number] = s; });
@@ -611,8 +624,9 @@ async function renderSite() {
   };
   const verifyHtml = sortedLeads.length
     ? `<div class="item-list">${sortedLeads.map(l => `
-        <div class="item-row verify-row verify-${l.priority}">
+        <div class="item-row verify-row verify-${l.priority} ${l.is_pending_review ? 'pending-review-row' : ''}">
           <div style="flex:1;">
+            ${l.is_pending_review ? `<span class="pending-review-tag">PENDING REVIEW, SUBMITTED BY ${(l.submitted_by || 'UNKNOWN').toUpperCase()}</span>` : ''}
             <div class="name">${l.description}</div>
             <div class="sub">${l.stages ? l.stages.name : 'General'}${l.source_pointer ? ' · ' + renderSourcePointer(l.source_pointer) : ''}</div>
             ${l.confirmation_action ? `
@@ -624,10 +638,28 @@ async function renderSite() {
                 <ul class="related-needs">${l.related_data_needs.map(n => `<li>${n}</li>`).join('')}</ul>
               </details>
             ` : ''}
+            ${l.pasted_content ? `
+              <details class="related-details">
+                <summary>View full pasted content</summary>
+                <div class="pasted-content-box">${l.pasted_content}</div>
+              </details>
+            ` : ''}
           </div>
           <span class="priority-tag priority-${l.priority}">${l.priority.toUpperCase()}</span>
         </div>`).join('')}</div>`
     : `<p class="qa-empty">No open items to verify right now.</p>`;
+
+  // ---- Evidence & Sources: every real citation for this site, one
+  // browsable, clickable list (like TAXA's article list), not scattered
+  // across individual stage answers.
+  const evidenceListHtml = siteEvidenceList && siteEvidenceList.length
+    ? `<div class="item-list">${siteEvidenceList.map(e => `
+        <div class="evidence-list-item">
+          <div class="name">${e.file_reference ? `<a href="${e.file_reference}" target="_blank" rel="noopener">${e.source_citation || e.description}</a>` : (e.source_citation || e.description)}</div>
+          <div class="sub">${e.description}${e.question_prompt ? ' · Relates to: ' + e.question_prompt : ''}</div>
+          <span class="tier-tag tier-${e.verification_tier}">${(e.verification_tier || '').toUpperCase()}</span>
+        </div>`).join('')}</div>`
+    : `<p class="qa-empty">No evidence recorded yet for this site.</p>`;
 
   // ---- Components ----
   const componentsHtml = components.length
@@ -739,6 +771,14 @@ async function renderSite() {
         <h2 class="section-title">Sources to verify</h2>
         <p class="kicker">Genuinely unread material. Different from the leads above, which have at least been read once, these are sources someone still needs to open and check.</p>
         ${verifyHtml}
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2 class="section-title">Evidence &amp; sources</h2>
+        <p class="kicker">Every real citation behind this case study, in one place: articles, documents, and records, click through to the original where a link exists.</p>
+        ${evidenceListHtml}
       </div>
     </section>
 
