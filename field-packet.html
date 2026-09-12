@@ -48,6 +48,7 @@
   .task-desc { font-size: 0.94rem; margin: 0 0 8px; }
   .task-action { font-size: 0.86rem; margin: 0 0 8px; }
   .task-action .label { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; color: var(--olive-deep); font-weight: 600; }
+  .inline-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; color: var(--olive-deep); font-weight: 600; }
   .checklist { margin: 8px 0; padding-left: 0; list-style: none; }
   .checklist li { font-size: 0.86rem; margin-bottom: 6px; padding-left: 22px; position: relative; }
   .checklist li::before {
@@ -138,40 +139,41 @@ async function renderPacket() {
     </div>
   `).join('') : `<p class="empty-note">No open items to investigate right now, nothing to print for this section.</p>`;
 
-  // Fetch per-path stage gaps (stages with low/no coverage)
+  // Fetch every genuinely unanswered question, with real guidance on what a
+  // strong answer looks like, not just an aggregate stage percentage.
   const pathOrder = ['wh', 'ich_representative', 'ich_urgent'];
   const sortedPaths = pathOrder.map(id => pathComparison.find(p => p.criteria_list_id === id)).filter(Boolean);
-  const stagesByAssessment = {};
-  await Promise.all(sortedPaths.map(async p => {
-    const rows = await api(`assessment_stage_status?assessment_id=eq.${p.assessment_id}&select=*&order=stage_number.asc`);
-    stagesByAssessment[p.assessment_id] = rows.filter(r => r.stage_status !== 'ready');
-  }));
+  const unanswered = await api(`site_unanswered_questions?site_id=eq.${siteId}&select=*&order=stage_number.asc`);
+  const generalQuestions = unanswered.filter(q => q.criteria_list_id === null);
+  const byPath = {};
+  sortedPaths.forEach(p => { byPath[p.criteria_list_id] = unanswered.filter(q => q.criteria_list_id === p.criteria_list_id); });
 
-  const [allStages] = await Promise.all([
-    api(`stages?select=stage_number,description&order=stage_number.asc`)
-  ]);
-  const descByStage = {};
-  allStages.forEach(s => { descByStage[s.stage_number] = s.description; });
+  const renderQuestionBlock = q => `
+    <div class="stage-gap">
+      <div class="stage-gap-name">${q.stage_name}</div>
+      <p class="task-desc" style="margin-top:4px;">${q.prompt}</p>
+      ${q.strong_answer_guidance ? `<p class="stage-gap-why"><span class="inline-label">A STRONG ANSWER LOOKS LIKE:</span> ${q.strong_answer_guidance}</p>` : ''}
+      <div class="notes-label" style="margin-top:8px;">FINDINGS / NOTES:</div>
+      <div class="notes-line"></div>
+      <div class="notes-line"></div>
+      <div class="notes-line"></div>
+      <div class="notes-line"></div>
+    </div>`;
 
-  const gapsHtml = sortedPaths.map(p => {
-    const gaps = stagesByAssessment[p.assessment_id] || [];
-    if (!gaps.length) return `
-      <h3 style="font-size:1rem; margin: 20px 0 8px;">${p.path_name.split('(')[0].trim()}</h3>
-      <p class="empty-note">No open stage gaps for this path.</p>`;
-    return `
-      <h3 style="font-size:1rem; margin: 20px 0 8px;">${p.path_name.split('(')[0].trim()}</h3>
-      ${gaps.map(g => `
-        <div class="stage-gap">
-          <div class="stage-gap-name">${g.stage_name}</div>
-          <p class="stage-gap-why">${descByStage[g.stage_number] || ''}</p>
-          <div class="stage-gap-data">${g.answered_questions} of ${g.total_questions} answered, ${g.coverage_pct}%</div>
-          <div class="notes-label" style="margin-top:8px;">FINDINGS / NOTES:</div>
-          <div class="notes-line"></div>
-          <div class="notes-line"></div>
-          <div class="notes-line"></div>
-          <div class="notes-line"></div>
-        </div>`).join('')}`;
-  }).join('');
+  const gapsHtml = `
+    ${generalQuestions.length ? `
+      <h3 style="font-size:1rem; margin: 20px 0 8px;">General (applies across all paths)</h3>
+      ${generalQuestions.map(renderQuestionBlock).join('')}
+    ` : ''}
+    ${sortedPaths.map(p => {
+      const qs = byPath[p.criteria_list_id] || [];
+      if (!qs.length) return `
+        <h3 style="font-size:1rem; margin: 20px 0 8px;">${p.path_name.split('(')[0].trim()}</h3>
+        <p class="empty-note">No open questions for this path.</p>`;
+      return `
+        <h3 style="font-size:1rem; margin: 20px 0 8px;">${p.path_name.split('(')[0].trim()}</h3>
+        ${qs.map(renderQuestionBlock).join('')}`;
+    }).join('')}`;
 
   document.title = `Field Packet - ${site.name}`;
 
