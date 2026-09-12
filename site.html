@@ -61,6 +61,21 @@
   .hero-btn-primary { background: var(--gold); border-color: var(--gold); color: var(--ink); font-weight: 600; }
   .hero-btn-primary:hover { color: var(--ink); opacity: 0.9; }
 
+  /* ---------- Photo gallery ---------- */
+  .gallery-section { padding-top: 0; padding-bottom: 0; }
+  .photo-gallery {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 4px; margin-top: -1px;
+  }
+  .gallery-item { margin: 0; position: relative; overflow: hidden; background: var(--ink); }
+  .gallery-item img { width: 100%; height: 220px; object-fit: cover; display: block; }
+  .gallery-item figcaption {
+    position: absolute; bottom: 0; left: 0; right: 0; padding: 8px 10px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.75));
+    color: #fff; font-size: 0.72rem; line-height: 1.4;
+  }
+  .gallery-item figcaption a { color: #E8DEC0; }
+
   section { padding: 56px 0; }
   section.alt { background: var(--stone-dim); }
   h2.section-title { font-size: clamp(1.4rem, 2.6vw, 1.85rem); margin: 0 0 10px; }
@@ -502,6 +517,25 @@ async function renderSite() {
         </div>`).join('')}</div>`
     : `<p class="qa-empty">No boundaries or features mapped yet.</p>`;
 
+  // ---- Photo gallery: real, properly-licensed photos only (CC BY 2.5 via
+  // PikiWiki Israel / Wikimedia Commons), never AI-generated -- this tool's
+  // credibility depends on evidence being real. All three current sites
+  // are Mi'ilya, so one shared set for now; if a genuinely different site
+  // is ever added, this should become a per-site lookup instead of one
+  // fixed array.
+  const MIILYA_GALLERY = [
+    { file: '117322 from above the crusader citadel PikiWiki Israel.jpg', caption: 'View from above the Crusader citadel', credit: 'PikiWiki Israel' },
+    { file: '122941 from the ancient winepress below the chateau resta PikiWiki Israel.jpg', caption: 'The ancient winepress below the castle', credit: 'PikiWiki Israel' },
+    { file: '112519 olive oil production in meylia PikiWiki Israel.jpg', caption: 'Olive oil production in Mi\u2019ilya', credit: 'PikiWiki Israel' },
+    { file: '117319 a traditional homemaker PikiWiki Israel.jpg', caption: 'A traditional homemaker, Mi\u2019ilya', credit: 'PikiWiki Israel' }
+  ];
+  const filePathUrl = filename => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(filename)}`;
+  const galleryHtml = MIILYA_GALLERY.map(p => `
+    <figure class="gallery-item">
+      <img src="${filePathUrl(p.file)}" alt="${p.caption}" loading="lazy" />
+      <figcaption>${p.caption} — <a href="https://commons.wikimedia.org/wiki/Category:Mi%27ilya" target="_blank" rel="noopener">${p.credit}</a>, CC BY 2.5</figcaption>
+    </figure>`).join('');
+
   document.getElementById('app').innerHTML = `
     <div class="hero">
       <div class="wrap">
@@ -516,6 +550,12 @@ async function renderSite() {
         </div>
       </div>
     </div>
+
+    <section class="gallery-section">
+      <div class="wrap">
+        <div class="photo-gallery">${galleryHtml}</div>
+      </div>
+    </section>
 
     <section>
       <div class="wrap">
