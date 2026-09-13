@@ -12,6 +12,7 @@
     --stone: #EDE8DC; --stone-dim: #E1DACB; --ink: #23261F; --ink-soft: #4A4E42;
     --olive: #6B7A5E; --olive-deep: #4F5C45; --clay: #A8623D; --slate: #3D5A6C;
     --gold: #B8933A; --alert: #A13D2E; --line: rgba(35,38,31,0.14);
+    --path1-bg: #FFFFFF; --path2-bg: #EAF0E4; --path3-bg: #FBEADC;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--stone); color: var(--ink); font-family: 'IBM Plex Sans', sans-serif; line-height: 1.55; font-size: 17px; }
@@ -122,8 +123,15 @@
     background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--gold);
     border-radius: 4px; padding: 22px 24px;
   }
+  .feedback-box.path-bg-1 { background: var(--path1-bg); }
+  .feedback-box.path-bg-2 { background: var(--path2-bg); }
+  .feedback-box.path-bg-3 { background: var(--path3-bg); }
+  .path-number { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; font-weight: 600; color: var(--ink-soft); vertical-align: middle; }
+  .tab .path-number { color: inherit; opacity: 0.7; }
   .feedback-box .generated { font-size: 0.8rem; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; margin-bottom: 10px; }
   .feedback-box .text { font-size: 0.96rem; }
+  .summary-para { font-size: 0.96rem; color: var(--ink); margin: 0 0 12px; line-height: 1.65; }
+  .summary-para:last-child { margin-bottom: 0; }
   .next-actions { margin-top: 16px; padding-left: 20px; }
   .next-actions li { font-size: 0.92rem; margin-bottom: 6px; }
 
@@ -245,12 +253,15 @@ async function renderPath() {
 
   // ---- Tab switcher ----
   const pathOrder = ['wh', 'ich_representative', 'ich_urgent'];
+  const PATH_NUMBER = { wh: 'Path 1', ich_representative: 'Path 2', ich_urgent: 'Path 3' };
+  const PATH_BG_CLASS = { wh: 'path-bg-1', ich_representative: 'path-bg-2', ich_urgent: 'path-bg-3' };
+
   const tabsHtml = pathOrder.map(id => {
     const p = allPaths.find(x => x.criteria_list_id === id);
     if (!p) return '';
     const active = id === pathId;
     return `<a class="tab ${active ? 'active' : ''}" href="path.html?site=${siteId}&path=${id}">
-      ${p.path_name.split('(')[0].trim()}<span class="tab-pct">${p.coverage_pct}%</span>
+      <span class="path-number">${PATH_NUMBER[id]}</span> ${p.path_name.split('(')[0].trim()}<span class="tab-pct">${p.coverage_pct}%</span>
     </a>`;
   }).join('');
 
@@ -286,21 +297,41 @@ async function renderPath() {
     const untouched = rows.filter(r => r.stage_status === 'not_started' || Number(r.coverage_pct) === 0);
     const totalAnswered = rows.reduce((s, r) => s + Number(r.answered_questions), 0);
     const totalQuestions = rows.reduce((s, r) => s + Number(r.total_questions), 0);
-    let text = `No written recommendation exists yet for this path, so here is what the underlying data actually shows: ${totalAnswered} of ${totalQuestions} questions answered across ${rows.length} stages. `;
-    if (ready.length) text += `Fully documented: ${ready.map(r => r.stage_name).join(', ')}. `;
-    if (untouched.length) text += `Not started at all: ${untouched.map(r => r.stage_name).join(', ')}. `;
-    if (started.length) text += `Partially documented: ${started.map(r => r.stage_name).join(', ')}.`;
-    return text.trim();
+    const paragraphs = [];
+    paragraphs.push(`No one has written a recommendation for this path yet, so here is what the underlying data actually shows: ${totalAnswered} of ${totalQuestions} questions answered across ${rows.length} stages.`);
+    if (ready.length) paragraphs.push(`Fully documented: ${ready.map(r => r.stage_name).join(', ')}.`);
+    if (started.length) paragraphs.push(`Partially documented: ${started.map(r => r.stage_name).join(', ')}.`);
+    if (untouched.length) paragraphs.push(`Not started at all: ${untouched.map(r => r.stage_name).join(', ')}.`);
+    return paragraphs.map(t => `<p class="summary-para">${t}</p>`).join('');
+  };
+
+  // Splits a long written recommendation into real paragraphs on natural
+  // sentence breaks, so a dense multi-sentence answer reads as short
+  // paragraphs instead of one unbroken block.
+  const formatLongText = text => {
+    if (!text) return '';
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+    const paragraphs = [];
+    let current = '';
+    sentences.forEach(s => {
+      current += s;
+      if (current.length > 220) { paragraphs.push(current.trim()); current = ''; }
+    });
+    if (current.trim()) paragraphs.push(current.trim());
+    return paragraphs.map(p => `<p class="summary-para">${p}</p>`).join('');
   };
 
   const renderChecklist = () => {
     const rows = stageStatus || [];
     if (!rows.length) return '';
-    return `<div class="quick-checklist">${rows.map(r => `
-      <div class="checklist-row ${r.stage_status === 'ready' ? 'check-yes' : 'check-no'}">
-        <span class="check-mark">${r.stage_status === 'ready' ? '\u2713' : '\u2717'}</span>
+    const have = rows.filter(r => r.stage_status === 'ready');
+    const missing = rows.filter(r => r.stage_status !== 'ready');
+    const row = (r, ok) => `
+      <div class="checklist-row ${ok ? 'check-yes' : 'check-no'}">
+        <span class="check-mark">${ok ? '\u2705' : '\u274c'}</span>
         <span class="check-name">${r.stage_name}</span>
-      </div>`).join('')}</div>`;
+      </div>`;
+    return `<div class="quick-checklist">${have.map(r => row(r, true)).join('')}${missing.map(r => row(r, false)).join('')}</div>`;
   };
 
   const renderSourcePointer = p => {
@@ -418,16 +449,16 @@ async function renderPath() {
   const feedbackHtml = isNotPursued
     ? `<p class="qa-empty">${pathInfo.outcome_note || 'This path was not used for this case.'}</p>`
     : (feedback.length
-      ? `<div class="feedback-box">
+      ? `<div class="feedback-box ${PATH_BG_CLASS[pathId]}">
           <div class="generated">${isInscribed ? 'Already inscribed' : 'Generated ' + new Date(feedback[0].generated_at).toLocaleDateString()}</div>
-          <div class="text">${feedback[0].feedback_text}</div>
+          <div class="text">${formatLongText(feedback[0].feedback_text)}</div>
           ${feedback[0].next_actions && feedback[0].next_actions.length ? `
             <div class="checklist-label" style="margin-top:16px;">${isInscribed ? 'WHAT THIS TEACHES US FOR MI\u2019ILYA' : 'RECOMMENDATION: WHAT TO DO NEXT'}</div>
             <ul class="next-actions">${feedback[0].next_actions.map(a => `<li>${a}</li>`).join('')}</ul>` : ''}
         </div>`
-      : `<div class="feedback-box">
+      : `<div class="feedback-box ${PATH_BG_CLASS[pathId]}">
           <div class="generated">Auto-generated from stage data</div>
-          <div class="text">${generateAutoSummary() || 'No stage data exists yet for this path.'}</div>
+          <div class="text">${generateAutoSummary() || '<p class="qa-empty">No stage data exists yet for this path.</p>'}</div>
         </div>`);
 
   const gatekeeperAlert = pathInfo.failed_gatekeepers > 0 ? `
