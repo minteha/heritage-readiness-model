@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timeline - Heritage Readiness Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #23261F; --ink-soft: #4A4E42; --line: #D8D2C2; --gold: #B8933A;
+    --olive-deep: #4F5C45; --olive: #6B7A5E; --stone-dim: #E1DACB;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'IBM Plex Sans', sans-serif; color: var(--ink); background: #fff;
+    max-width: 720px; margin: 0 auto; padding: 0 24px 80px;
+  }
+  .page-header {
+    background: linear-gradient(rgba(35,38,31,0.72), rgba(35,38,31,0.85)), url('miilya-olive-header.jpg');
+    background-size: cover; background-position: center 30%;
+    margin: 0 -24px 32px; padding: 40px 24px 28px;
+  }
+  h1 { font-family: 'Fraunces', serif; font-size: 1.8rem; margin: 0 0 6px; color: #fff; }
+  .page-header p { color: #E8E4D8; font-size: 0.92rem; margin: 0; }
+  .back-link { display: inline-block; margin-bottom: 24px; font-size: 0.88rem; color: var(--ink-soft); text-decoration: none; }
+
+  .timeline { position: relative; padding-left: 4px; }
+  .timeline::before { content: ''; position: absolute; left: 88px; top: 8px; bottom: 8px; width: 2px; background: var(--line); }
+  .timeline-event { display: flex; gap: 24px; margin-bottom: 28px; position: relative; }
+  .timeline-year {
+    width: 88px; flex-shrink: 0; text-align: right; padding-right: 20px;
+    font-family: 'Fraunces', serif; font-size: 1.05rem; font-weight: 600; color: var(--olive-deep);
+    position: relative;
+  }
+  .timeline-year::after {
+    content: ''; position: absolute; right: -5px; top: 5px; width: 12px; height: 12px;
+    border-radius: 50%; background: var(--gold); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--gold);
+  }
+  .timeline-body { flex: 1; padding-bottom: 4px; }
+  .timeline-title { font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
+  .timeline-desc { font-size: 0.92rem; color: var(--ink-soft); margin: 0 0 6px; }
+  .timeline-source { font-size: 0.8rem; color: var(--ink-soft); font-style: italic; }
+  .empty-note { font-size: 0.9rem; color: var(--ink-soft); font-style: italic; }
+</style>
+</head>
+<body>
+<div id="app"><p style="padding-top:40px;">Loading...</p></div>
+
+<script>
+const SUPABASE_URL = 'https://dntqhsrxbmhdbfyqnimk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRudHFoc3J4Ym1oZGJmeXFuaW1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTk1NTIsImV4cCI6MjEwNDQ3NTU1Mn0.SyxoJflfFLX3UkqK7HKaJES2DGdjuI5BjnWz3YYIsiE';
+
+async function api(path) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
+}
+
+async function renderTimeline() {
+  const params = new URLSearchParams(window.location.search);
+  const siteId = params.get('site');
+  if (!siteId) { document.getElementById('app').innerHTML = '<p>No site selected.</p>'; return; }
+
+  const [sites, timelineEvents] = await Promise.all([
+    api(`sites?site_id=eq.${siteId}&select=name`),
+    api(`timeline_events?site_id=eq.${siteId}&select=*&order=year_start.asc`)
+  ]);
+  const site = sites[0];
+  if (!site) { document.getElementById('app').innerHTML = '<p>Site not found.</p>'; return; }
+  document.title = `Timeline - ${site.name}`;
+
+  const timelineHtml = timelineEvents && timelineEvents.length
+    ? `<div class="timeline">${timelineEvents.map(t => `
+        <div class="timeline-event">
+          <div class="timeline-year">${t.year_start}${t.year_end ? '\u2013' + t.year_end : ''}</div>
+          <div class="timeline-body">
+            <div class="timeline-title">${t.title}</div>
+            <p class="timeline-desc">${t.description}</p>
+            ${t.source_citation ? `<div class="timeline-source">${t.source_citation}</div>` : ''}
+          </div>
+        </div>`).join('')}</div>`
+    : `<p class="empty-note">No dated events recorded yet for this site.</p>`;
+
+  document.getElementById('app').innerHTML = `
+    <div class="page-header">
+      <h1>Timeline</h1>
+      <p>${site.name}</p>
+    </div>
+    <a class="back-link" href="site.html?site=${siteId}">&larr; Back to case study</a>
+    ${timelineHtml}
+  `;
+}
+renderTimeline().catch(e => { console.error(e); document.getElementById('app').innerHTML = '<p>Something went wrong loading this timeline.</p>'; });
+</script>
+</body>
+</html>
