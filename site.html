@@ -258,6 +258,24 @@
     font-size: 0.85rem; white-space: pre-wrap; max-height: 300px; overflow-y: auto; line-height: 1.5;
   }
   .evidence-list-item { border: 1px solid var(--line); border-radius: 4px; padding: 12px 16px; margin-bottom: 10px; }
+  .timeline { position: relative; padding-left: 4px; }
+  .timeline::before {
+    content: ''; position: absolute; left: 88px; top: 8px; bottom: 8px; width: 2px; background: var(--line);
+  }
+  .timeline-event { display: flex; gap: 24px; margin-bottom: 28px; position: relative; }
+  .timeline-year {
+    width: 88px; flex-shrink: 0; text-align: right; padding-right: 20px;
+    font-family: 'Fraunces', serif; font-size: 1.05rem; font-weight: 600; color: var(--olive-deep);
+    position: relative;
+  }
+  .timeline-year::after {
+    content: ''; position: absolute; right: -5px; top: 5px; width: 12px; height: 12px;
+    border-radius: 50%; background: var(--gold); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--gold);
+  }
+  .timeline-body { flex: 1; padding-bottom: 4px; }
+  .timeline-title { font-weight: 600; font-size: 0.98rem; margin-bottom: 4px; }
+  .timeline-desc { font-size: 0.9rem; color: var(--ink-soft); margin: 0 0 6px; }
+  .timeline-source { font-size: 0.78rem; color: var(--ink-soft); font-style: italic; }
   .evidence-list-item .name a { color: var(--ink); }
   .evidence-list-item .sub { font-size: 0.82rem; color: var(--ink-soft); margin-top: 3px; }
   .related-details { margin-top: 8px; }
@@ -346,7 +364,7 @@ async function renderSite() {
 
   document.title = `${site.name} - Heritage Readiness Model`;
 
-  const [pathComparison, stages, siteAnswers, components, threats, mapFeatures, researchLeads, allStages, siteEvidenceList] = await Promise.all([
+  const [pathComparison, stages, siteAnswers, components, threats, mapFeatures, researchLeads, allStages, siteEvidenceList, timelineEvents] = await Promise.all([
     api(`site_path_comparison?site_id=eq.${siteId}&select=*`),
     api(`stages?scope=eq.site&order=stage_number.asc`),
     api(`site_answers?site_id=eq.${siteId}&select=*,assessment_questions(prompt,stage_number,question_type),evidence_records(description,source_citation,verification_tier,file_reference)`),
@@ -355,10 +373,26 @@ async function renderSite() {
     api(`map_features?site_id=eq.${siteId}&select=*`),
     api(`research_leads?site_id=eq.${siteId}&status=eq.open&select=*,stages(name)&order=priority.asc`),
     api(`stages?select=stage_number,name,description,scope,source_type&order=stage_number.asc`),
-    api(`site_evidence_list?site_id=eq.${siteId}&select=*`)
+    api(`site_evidence_list?site_id=eq.${siteId}&select=*`),
+    api(`timeline_events?site_id=eq.${siteId}&select=*&order=year_start.asc`)
   ]);
   const stageInfoByNumber = {};
   allStages.forEach(s => { stageInfoByNumber[s.stage_number] = s; });
+
+  // ---- Timeline: real dated facts, structured chronologically instead of
+  // buried in prose. Direct response to reviewer feedback asking for a
+  // "map of dates."
+  const timelineHtml = timelineEvents && timelineEvents.length
+    ? `<div class="timeline">${timelineEvents.map(t => `
+        <div class="timeline-event">
+          <div class="timeline-year">${t.year_start}${t.year_end ? '\u2013' + t.year_end : ''}</div>
+          <div class="timeline-body">
+            <div class="timeline-title">${t.title}</div>
+            <p class="timeline-desc">${t.description}</p>
+            ${t.source_citation ? `<div class="timeline-source">${t.source_citation}</div>` : ''}
+          </div>
+        </div>`).join('')}</div>`
+    : `<p class="qa-empty">No dated events recorded yet for this site.</p>`;
 
   // ---- Path summary cards ----
   const pathOrder = ['wh', 'ich_representative', 'ich_urgent'];
@@ -733,6 +767,15 @@ async function renderSite() {
     <section class="gallery-section">
       <div class="wrap">
         <div class="photo-gallery">${galleryHtml}</div>
+      </div>
+    </section>` : ''}
+
+    ${timelineEvents && timelineEvents.length ? `
+    <section>
+      <div class="wrap">
+        <h2 class="section-title">Timeline</h2>
+        <p class="kicker">Real, dated facts, structured chronologically rather than buried in prose.</p>
+        ${timelineHtml}
       </div>
     </section>` : ''}
 

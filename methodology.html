@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Methodology & Rationale - Heritage Readiness Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --stone: #EDE8DC; --stone-dim: #E1DACB; --ink: #23261F; --ink-soft: #4A4E42;
+    --olive: #6B7A5E; --olive-deep: #4F5C45; --gold: #B8933A; --line: rgba(35,38,31,0.14);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff; color: var(--ink); font-family: 'IBM Plex Sans', sans-serif; line-height: 1.6; font-size: 17px; }
+  h1, h2, h3, .display { font-family: 'Fraunces', serif; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: var(--olive-deep); }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 28px; }
+
+  .topnav { background: var(--ink); color: var(--stone); padding: 18px 0; }
+  .topnav .wrap { display: flex; justify-content: space-between; align-items: center; }
+  .topnav a.back { color: var(--gold); font-size: 0.9rem; text-decoration: none; }
+  .topnav .brand { font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; color: #C9C3B2; }
+
+  .hero {
+    background: linear-gradient(rgba(35,38,31,0.72), rgba(35,38,31,0.85)), url('miilya-olive-header.jpg');
+    background-size: cover; background-position: center 30%;
+    color: var(--stone); padding: 60px 0 48px;
+  }
+  .hero .kicker-label { font-family: 'IBM Plex Mono', monospace; color: var(--gold); font-size: 0.85rem; }
+  .hero h1 { font-size: clamp(2rem, 4vw, 2.8rem); color: #fff; margin: 10px 0 14px; max-width: 18ch; }
+  .hero p { color: #E8E4D8; max-width: 60ch; font-size: 1.02rem; }
+
+  section { padding: 48px 0; border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: none; }
+  section.alt { background: var(--stone-dim); }
+  h2.section-title { font-size: clamp(1.4rem, 2.4vw, 1.75rem); margin: 0 0 18px; }
+  h3.sub-title { font-size: 1.15rem; margin: 28px 0 10px; }
+  p { max-width: 68ch; }
+  .lede { font-size: 1.08rem; color: var(--ink-soft); max-width: 66ch; }
+
+  .comparator-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 20px; }
+  .comparator-card { background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 18px 20px; }
+  .comparator-card h4 { margin: 0 0 6px; font-size: 1.02rem; font-family: 'Fraunces', serif; }
+  .comparator-card .tag { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--olive-deep); background: rgba(107,122,94,0.12); padding: 2px 8px; border-radius: 3px; }
+  .comparator-card p { font-size: 0.9rem; color: var(--ink-soft); margin: 8px 0 0; }
+
+  .growth-box {
+    background: #fff; border-left: 4px solid var(--gold); border-radius: 0 6px 6px 0;
+    padding: 22px 26px; margin-top: 20px;
+  }
+  .growth-box p { margin: 0; font-size: 1rem; }
+
+  ul.plain { padding-left: 22px; }
+  ul.plain li { margin-bottom: 10px; }
+
+  footer { padding: 40px 0 60px; color: var(--ink-soft); font-size: 0.88rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  footer a { color: var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <div class="wrap">
+    <a class="back" href="index.html">&larr; Methodology overview</a>
+    <span class="brand">HERITAGE READINESS MODEL</span>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="wrap">
+    <span class="kicker-label">WHY THIS MODEL EXISTS</span>
+    <h1>Knowing what you actually have, before you ask the world to recognize it</h1>
+    <p>A working assessment methodology for traditional orchards and agricultural landscapes, built to answer one honest question: are we actually ready, and if not, what specifically is missing?</p>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <h2 class="section-title">The problem this model answers</h2>
+    <p class="lede">A community, a researcher, or a student working on a heritage nomination usually has two bad options: read UNESCO's own dense procedural documents cover to cover, or guess. Neither tells you, plainly, whether a specific piece of evidence is strong enough, or what a real reviewer would actually ask for next.</p>
+    <p>This model exists to close that gap. It takes UNESCO's own official assessment structure, the Operational Guidelines for the World Heritage Convention and the Operational Directives for the 2003 Intangible Cultural Heritage Convention, and turns it into sixteen concrete stages, each with a real question, a real example, and an honest status: ready, needs evidence, or not yet started.</p>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <h2 class="section-title">What the model actually does</h2>
+    <p class="lede">Three things, working together, not three separate features.</p>
+    <h3 class="sub-title">It routes a site to the right path</h3>
+    <p>World Heritage, ICH Representative, and ICH Urgent Safeguarding are three different conventions with three different bars to clear. The model tracks a site against all three simultaneously, and is honest when the strongest path isn't the one with the highest percentage, a single failed gatekeeper (missing community consent, for example) overrides everything else.</p>
+    <h3 class="sub-title">It tells you what's missing, specifically</h3>
+    <p>Not "40% complete." A real, generated summary: which stages are fully documented, which have never been touched, and, for each unanswered question, what a genuinely strong answer would actually contain, pulled directly from the same guidance UNESCO reviewers themselves use.</p>
+    <h3 class="sub-title">It tells the difference between a lead and evidence</h3>
+    <p>A newspaper mention is not the same as a verified citation. Every piece of information in this model carries an honest tier, verified, lead, or genuinely unread, and a lead can never on its own mark a question Ready. This discipline is the difference between a model that looks complete and one that actually is.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2 class="section-title">Why these four reference cases, specifically</h2>
+    <p class="lede">Not chosen as interesting examples. Each was reverse-engineered from a real, specific question Mi'ilya's own case raised, then studied from primary sources, the actual nomination dossiers and Committee decisions, not secondhand summaries, to find out what a real reviewer actually asked for.</p>
+    <div class="comparator-grid">
+      <div class="comparator-card">
+        <span class="tag">ICH Representative</span>
+        <h4>Al-Mihrass, Jordan</h4>
+        <p>The closest possible precedent: same region, same subject, ancient olive trees, same path. Studied to learn exactly what a successful file looks like, criterion by criterion.</p>
+      </div>
+      <div class="comparator-card">
+        <span class="tag">World Heritage, emergency</span>
+        <h4>Sebastia, Palestine</h4>
+        <p>An active, still-pending emergency nomination. Studied to understand what a threat-driven case looks like, and what real urgency actually requires in a dossier.</p>
+      </div>
+      <div class="comparator-card">
+        <span class="tag">ICH Urgent Safeguarding</span>
+        <h4>Turkish olive cultivation</h4>
+        <p>A genuinely different threat framing: production stays viable while the traditional knowledge itself erodes. Studied to learn that distinction precisely.</p>
+      </div>
+      <div class="comparator-card">
+        <span class="tag">World Heritage, landscape</span>
+        <h4>Serra de Tramuntana, Spain</h4>
+        <p>The specific precedent behind Mi'ilya's own combined winery-and-orchard question. Read directly from the actual ICOMOS evaluation, revealing a harder, more honest standard than expected.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <h2 class="section-title">An AI-assisted research workflow, not automatic data entry</h2>
+    <p class="lede">The model doesn't ask a community to type facts into a form and hope for the best. Real primary sources, nomination dossiers, Committee decisions, academic papers, are read directly, extracted, tagged with an honest confidence tier, and cited. When a written recommendation doesn't exist yet for a path, the model generates one from the real underlying data rather than leaving a blank.</p>
+    <p>This is the actual answer to a real question worth asking directly: can this model do the reading and analysis itself, not just hold a folder of files? Within a supervised, source-checked workflow, yes, this is what happened across every reference case in this project.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2 class="section-title">Where this can go</h2>
+    <div class="growth-box">
+      <p>Nothing in this model is Mi'ilya-specific. The stage structure, the evidence discipline, the auto-generated summaries, and the three-path guidance were built to onboard any orchard or heritage-tree site, anywhere, olive, date palm, fig, pomegranate, grapevine, and walk it through the same rigorous path toward UNESCO readiness. Mi'ilya is the first real case this framework was built against, not the limit of what it can hold.</p>
+    </div>
+    <ul class="plain" style="margin-top:24px;">
+      <li>A new site is one row in the database, not a schema change.</li>
+      <li>The same sixteen stages, the same evidence-tier discipline, and the same auto-generated guidance apply immediately.</li>
+      <li>A research team studying multiple heritage-tree sites could use this as a shared, standing readiness tracker across all of them at once, not a one-off tool built for a single case.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap" style="display:flex; justify-content:space-between; width:100%; flex-wrap:wrap; gap:10px;">
+    <span class="mono">v0.1.0</span>
+    <a href="https://github.com/minteha/heritage-readiness-model" class="mono">github.com/minteha/heritage-readiness-model</a>
+  </div>
+</footer>
+
+</body>
+</html>
