@@ -67,6 +67,7 @@
   }
   .notes-line { border-bottom: 1px solid var(--line); height: 34px; margin-top: 4px; }
   .mini-notes-line { border-bottom: 1px solid var(--line); height: 24px; margin: 6px 0 0 0; }
+  .hint-line { font-size: 0.82rem; color: var(--olive-deep); font-style: italic; margin: 4px 0 0; }
   .notes-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; color: var(--ink-soft); margin-top: 10px; }
   .empty-note { font-size: 0.88rem; color: var(--ink-soft); font-style: italic; }
 
@@ -125,6 +126,15 @@ async function renderInterviewPacket() {
   const allLeads = await api(`research_leads?site_id=eq.${siteId}&status=eq.open&select=*,stages(name)`);
   const interviewLeads = allLeads.filter(isInterviewRelevant);
 
+  // Stages a conversation can genuinely resolve: community knowledge, oral
+  // history, economic livelihood, who's responsible, what's been observed.
+  // Deliberately excludes stages needing measurement, mapping, or legal
+  // research (conservation, boundaries, threats-by-document, criteria
+  // selection) -- a person's testimony doesn't substitute for those.
+  const INTERVIEW_STAGES = [4, 8, 10, 12, 13];
+  const unanswered = await api(`site_unanswered_questions?site_id=eq.${siteId}&select=*`);
+  const interviewQuestions = unanswered.filter(q => INTERVIEW_STAGES.includes(q.stage_number));
+
   const allTalkingPoints = new Set();
   interviewLeads.forEach(l => {
     if (l.related_data_needs && l.related_data_needs.length) {
@@ -137,16 +147,26 @@ async function renderInterviewPacket() {
     ? `<ul class="talking-points">${[...allTalkingPoints].map(n => `<li>${n}<div class="mini-notes-line"></div><div class="mini-notes-line"></div></li>`).join('')}</ul>`
     : '';
 
-  const bodyHtml = interviewLeads.length ? `
+  const openQuestionsHtml = interviewQuestions.length
+    ? `<ul class="talking-points">${interviewQuestions.map(q => `<li>${q.prompt}${q.strong_answer_guidance ? `<div class="hint-line">A strong answer looks like: ${q.strong_answer_guidance}</div>` : ''}<div class="mini-notes-line"></div><div class="mini-notes-line"></div></li>`).join('')}</ul>`
+    : '';
+
+  const bodyHtml = (interviewLeads.length || interviewQuestions.length) ? `
     <div class="who-block">
       <div class="who-block-label">ONE CONVERSATION, MULTIPLE OUTCOMES</div>
       <p class="who-block-desc">A single interview with the right person, a family member, a knowledge-holder, a landowner, can resolve everything below at once. Personal information gathered directly is worth far more than the same facts pieced together secondhand from articles.</p>
-      <span class="bullseye-count">${allTalkingPoints.size} talking point${allTalkingPoints.size === 1 ? '' : 's'} this one visit could resolve</span>
+      <span class="bullseye-count">${allTalkingPoints.size + interviewQuestions.length} talking point${(allTalkingPoints.size + interviewQuestions.length) === 1 ? '' : 's'} this one visit could resolve</span>
     </div>
 
+    ${talkingPointsHtml ? `
     <h2 class="section-title">What to cover</h2>
     <p class="section-note">Check each off as it's covered, and write the actual answer on the line beneath. That answer is what comes back into the system afterward.</p>
-    ${talkingPointsHtml}
+    ${talkingPointsHtml}` : ''}
+
+    ${openQuestionsHtml ? `
+    <h2 class="section-title">Questions no one has asked yet</h2>
+    <p class="section-note">These have never been answered at all, not because someone forgot to write it down, because no one has asked. Worth raising directly in this same conversation.</p>
+    ${openQuestionsHtml}` : ''}
 
     <h2 class="section-title">Space for the conversation itself</h2>
     <p class="section-note">Use this for anything that comes up beyond the list above. Real interviews often go places a checklist can't predict.</p>
