@@ -99,7 +99,7 @@
   /* ---------- Three paths ---------- */
   .paths {
     display: grid;
-    grid-template-columns: 1.3fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 20px;
     align-items: stretch;
   }
@@ -111,17 +111,17 @@
     gap: 14px;
   }
   .path-card.wh {
-    background: #fff;
+    background: #FFFFFF;
     border: 1px solid var(--line);
     border-top: 5px solid var(--slate);
   }
   .path-card.ich-rep {
-    background: #fff;
+    background: #EAF0E4;
     border: 1px solid var(--line);
     border-top: 5px solid var(--olive);
   }
   .path-card.ich-urgent {
-    background: #FBF3E2;
+    background: #FBEADC;
     border: 1px solid rgba(184,147,58,0.35);
     border-top: 5px solid var(--gold);
   }
@@ -248,6 +248,8 @@
   }
   .source-card .year { font-family: 'IBM Plex Mono', monospace; color: var(--clay); font-size: 0.85rem; }
   .source-card h3 { font-size: 1.1rem; margin: 8px 0 10px; }
+  .source-card h3 a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--olive); text-underline-offset: 3px; }
+  .source-card h3 a:hover { color: var(--olive-deep); }
   .source-card p { font-size: 0.92rem; color: var(--ink-soft); margin: 0; }
 
   footer {
@@ -339,6 +341,10 @@
     border-bottom: 1px solid var(--line);
   }
   .sidebar-note em { font-style: italic; }
+  .sidebar-note summary {
+    cursor: pointer; font-weight: 600; color: var(--olive-deep); font-style: normal;
+  }
+  .sidebar-note p { margin: 8px 0 0; }
   .sidebar-error {
     font-size: 0.85rem;
     color: var(--clay);
@@ -391,7 +397,7 @@
     <h1>Before you nominate, know what you actually have.</h1>
     <p>A working assessment methodology for traditional orchards and agricultural landscapes. The sixteen stages are based on two key UNESCO documents, which are linked at the bottom of this page.</p>
     <p>Pilot case study: the ancient olive orchards of Mi'ilya.</p>
-    <p><a href="methodology.html" style="color:var(--gold);">Read the full methodology and rationale &rarr;</a></p>
+    <p style="text-align:center; margin-top:24px;"><a href="methodology.html" style="color:var(--gold); font-size:1.2rem; font-weight:600;">Click here to read the full methodology and rationale of this model</a></p>
   </div>
 </div>
 
@@ -456,14 +462,14 @@
     <p class="kicker">This page describes the model's stage structure specifically. Evidence gathered for individual sites, like academic papers, interviews, and official records, lives on each site's own page instead. The "Official UNESCO requirement" tags shown throughout this framework trace directly to the two texts below, read in full.</p>
     <div class="sources">
       <div class="source-card">
-        <span class="year">WHC.25/01 · 16 July 2025</span>
-        <h3>Operational Guidelines for the Implementation of the World Heritage Convention</h3>
+        <span class="year">WHC.25/01 &middot; 16 July 2025</span>
+        <h3><a href="https://whc.unesco.org/document/222376" target="_blank" rel="noopener">Operational Guidelines for the Implementation of the World Heritage Convention</a></h3>
         <p>Defines the ten criteria, the three-type Cultural Landscape typology, the seven authenticity attributes, the three integrity conditions, and the official Preliminary Assessment format (Annex 3) this model's stage structure is built on.</p>
       </div>
       <div class="source-card">
         <span class="year">2024 edition</span>
-        <h3>Operational Directives for the Implementation of the 2003 Convention</h3>
-        <p>Defines the Representative List (R.1–R.5) and Urgent Safeguarding List (U.1–U.6) criteria, and the free, prior and informed consent (FPIC) standard governing the community-consent stage.</p>
+        <h3><a href="https://ich.unesco.org/en/directives" target="_blank" rel="noopener">Operational Directives for the Implementation of the 2003 Convention</a></h3>
+        <p>Defines the Representative List (R.1&ndash;R.5) and Urgent Safeguarding List (U.1&ndash;U.6) criteria, and the free, prior and informed consent (FPIC) standard governing the community-consent stage.</p>
       </div>
     </div>
   </div>
@@ -572,7 +578,13 @@ async function loadSites() {
     if (activeSites.length > 1) {
       const note = document.createElement('p');
       note.className = 'sidebar-note';
-      note.innerHTML = '<em>Why three Mi\'ilya entries? The olive orchards are our actual primary target, following Al-Mihrass\'s precedent. The winery case documents a genuinely different, well-evidenced heritage track kept separate for now. The combined case is a conditional fallback, only becoming our real strategy if evidence shows the two systems were historically managed as one, not just coexisting.</em>';
+      note.innerHTML = `
+        <details>
+          <summary>Click here to learn why we added three study cases for Mi'ilya</summary>
+          <p style="margin-top:8px;">It depends entirely on the actual nomination goal. Is the target UNESCO recognition for Mi'ilya as a whole, winery and olive orchards together as one integrated landscape? Or specifically the living olive tradition alone, separate from the castle and winery heritage? These are genuinely different claims, needing different evidence.</p>
+          <p>The olive orchards are our actual primary target, following Al-Mihrass's precedent. The winery case documents a genuinely different, well-evidenced heritage track kept separate for now. The combined case is a conditional fallback, only becoming our real strategy if evidence shows the two systems were historically managed as one, not just coexisting in the same village.</p>
+        </details>
+      `;
       container.appendChild(note);
     }
 
