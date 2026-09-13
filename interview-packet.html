@@ -80,7 +80,33 @@
     }
     .packet-header h1 { color: var(--ink); }
     .packet-header .meta-line { color: var(--ink-soft); }
+    .passcode-bar, .answer-controls { display: none; }
+    .answer-input { border: none; border-bottom: 1px solid #999; height: 50px; resize: none; }
   }
+  .passcode-bar {
+    background: var(--stone-dim); border-radius: 4px; padding: 14px 16px; margin: 20px 0;
+  }
+  .passcode-bar label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; }
+  .passcode-bar input {
+    width: 100%; max-width: 320px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px;
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 0.9rem;
+  }
+  .passcode-hint { font-size: 0.78rem; color: var(--ink-soft); margin: 6px 0 0; }
+  .talking-points .answer-input {
+    width: 100%; font-family: 'IBM Plex Sans', sans-serif; font-size: 0.88rem;
+    padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; resize: vertical; margin-top: 6px;
+  }
+  .answer-controls { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
+  .save-answer-btn {
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 0.8rem; font-weight: 600;
+    padding: 6px 14px; border-radius: 4px; border: 1px solid var(--gold); background: var(--gold);
+    color: var(--ink); cursor: pointer;
+  }
+  .save-answer-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .save-status { font-size: 0.78rem; }
+  .save-status.success { color: var(--olive-deep); }
+  .save-status.error { color: #A13D2E; }
+  .talking-points li.answer-saved { background: #F4F7F0; border-radius: 4px; padding: 6px; margin-left: -6px; }
 </style>
 </head>
 <body>
@@ -148,7 +174,14 @@ async function renderInterviewPacket() {
     : '';
 
   const openQuestionsHtml = interviewQuestions.length
-    ? `<ul class="talking-points">${interviewQuestions.map(q => `<li>${q.prompt}${q.strong_answer_guidance ? `<div class="hint-line">A strong answer looks like: ${q.strong_answer_guidance}</div>` : ''}<div class="mini-notes-line"></div><div class="mini-notes-line"></div></li>`).join('')}</ul>`
+    ? `<ul class="talking-points">${interviewQuestions.map(q => `<li data-question-id="${q.question_id}" data-criteria-list-id="${q.criteria_list_id || ''}">
+        ${q.prompt}${q.strong_answer_guidance ? `<div class="hint-line">A strong answer looks like: ${q.strong_answer_guidance}</div>` : ''}
+        <textarea class="answer-input" rows="2" placeholder="Type the answer here while you talk..."></textarea>
+        <div class="answer-controls">
+          <button class="save-answer-btn">Save this answer</button>
+          <span class="save-status"></span>
+        </div>
+      </li>`).join('')}</ul>`
     : '';
 
   const bodyHtml = (interviewLeads.length || interviewQuestions.length) ? `
@@ -191,8 +224,72 @@ async function renderInterviewPacket() {
       <a class="secondary" href="site.html?site=${siteId}">Back to case study</a>
     </div>
 
+    <div class="passcode-bar">
+      <label for="global-passcode">Your passcode, to save answers directly while you talk</label>
+      <input type="password" id="global-passcode" autocomplete="off" placeholder="Enter your passcode to enable saving">
+      <p class="passcode-hint">Without a passcode, this still works as a printable script, write answers by hand and add them later.</p>
+    </div>
+
     ${bodyHtml}
   `;
+
+  const passcodeInput = document.getElementById('global-passcode');
+  if (passcodeInput) {
+    passcodeInput.addEventListener('input', e => { window.__passcode = e.target.value; });
+  }
+
+  document.querySelectorAll('.save-answer-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const item = btn.closest('li');
+      const questionId = item.dataset.questionId;
+      const criteriaListId = item.dataset.criteriaListId || null;
+      const textarea = item.querySelector('.answer-input');
+      const statusEl = item.querySelector('.save-status');
+      const passcode = window.__passcode || '';
+
+      if (!passcode) {
+        statusEl.textContent = 'Enter your passcode above first.';
+        statusEl.className = 'save-status error';
+        return;
+      }
+      if (!textarea.value || textarea.value.trim().length < 5) {
+        statusEl.textContent = 'Write a real answer first (at least 5 characters).';
+        statusEl.className = 'save-status error';
+        return;
+      }
+
+      btn.disabled = true;
+      statusEl.textContent = 'Saving...';
+      statusEl.className = 'save-status';
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/submit_answer_with_passcode`, {
+          method: 'POST',
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            p_passcode: passcode,
+            p_site_id: siteId,
+            p_question_id: questionId,
+            p_answer_text: textarea.value,
+            p_criteria_list_id: criteriaListId
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          statusEl.textContent = `Saved as ${data.submitted_by}.`;
+          statusEl.className = 'save-status success';
+          item.classList.add('answer-saved');
+        } else {
+          statusEl.textContent = data.error || 'Something went wrong.';
+          statusEl.className = 'save-status error';
+        }
+      } catch (e) {
+        statusEl.textContent = 'Could not reach the server.';
+        statusEl.className = 'save-status error';
+      }
+      btn.disabled = false;
+    });
+  });
 }
 
 renderInterviewPacket().catch(e => { console.error(e); renderEmpty('Something went wrong generating this packet.'); });

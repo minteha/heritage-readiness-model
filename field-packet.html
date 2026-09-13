@@ -72,12 +72,38 @@
     }
     .packet-header h1 { color: var(--ink); }
     .packet-header .meta-line { color: var(--ink-soft); }
+    .passcode-bar, .answer-controls { display: none; }
+    .answer-input { border: none; border-bottom: 1px solid #999; height: 70px; resize: none; }
   }
+  .passcode-bar {
+    background: var(--stone-dim); border-radius: 4px; padding: 14px 16px; margin-bottom: 24px;
+  }
+  .passcode-bar label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; }
+  .passcode-bar input {
+    width: 100%; max-width: 320px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px;
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 0.9rem;
+  }
+  .passcode-hint { font-size: 0.78rem; color: var(--ink-soft); margin: 6px 0 0; }
+  .answer-input {
+    width: 100%; font-family: 'IBM Plex Sans', sans-serif; font-size: 0.9rem;
+    padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; resize: vertical;
+  }
+  .answer-controls { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
+  .save-answer-btn {
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
+    padding: 6px 14px; border-radius: 4px; border: 1px solid var(--gold); background: var(--gold);
+    color: var(--ink); cursor: pointer;
+  }
+  .save-answer-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .save-status { font-size: 0.8rem; }
+  .save-status.success { color: var(--olive-deep); }
+  .save-status.error { color: #A13D2E; }
+  .stage-gap.answer-saved { border-left-color: var(--olive); background: #F4F7F0; }
 </style>
 </head>
 <body>
 <div id="app">
-  <p>Loading…</p>
+  <p>Loading&hellip;</p>
 </div>
 
 <script>
@@ -149,15 +175,16 @@ async function renderPacket() {
   sortedPaths.forEach(p => { byPath[p.criteria_list_id] = unanswered.filter(q => q.criteria_list_id === p.criteria_list_id); });
 
   const renderQuestionBlock = q => `
-    <div class="stage-gap">
+    <div class="stage-gap" data-question-id="${q.question_id}" data-criteria-list-id="${q.criteria_list_id || ''}">
       <div class="stage-gap-name">${q.stage_name}</div>
       <p class="task-desc" style="margin-top:4px;">${q.prompt}</p>
       ${q.strong_answer_guidance ? `<p class="stage-gap-why"><span class="inline-label">A STRONG ANSWER LOOKS LIKE:</span> ${q.strong_answer_guidance}</p>` : ''}
-      <div class="notes-label" style="margin-top:8px;">FINDINGS / NOTES:</div>
-      <div class="notes-line"></div>
-      <div class="notes-line"></div>
-      <div class="notes-line"></div>
-      <div class="notes-line"></div>
+      <div class="notes-label" style="margin-top:8px;">YOUR ANSWER:</div>
+      <textarea class="answer-input" rows="3" placeholder="Type the answer here..."></textarea>
+      <div class="answer-controls">
+        <button class="save-answer-btn">Save this answer</button>
+        <span class="save-status"></span>
+      </div>
     </div>`;
 
   const gapsHtml = `
@@ -185,7 +212,13 @@ async function renderPacket() {
 
     <div class="toolbar">
       <button onclick="window.print()">Print / Save as PDF</button>
-      <a class="secondary" href="site.html?site=${siteId}">← Back to case study</a>
+      <a class="secondary" href="site.html?site=${siteId}">&larr; Back to case study</a>
+    </div>
+
+    <div class="passcode-bar">
+      <label for="global-passcode">Your passcode, to save answers directly into the system</label>
+      <input type="password" id="global-passcode" autocomplete="off" placeholder="Enter your passcode to enable saving">
+      <p class="passcode-hint">You can still print and fill this in by hand without a passcode. Entering one lets you save answers directly instead.</p>
     </div>
 
     <h2 class="section-title">Open items to confirm</h2>
@@ -193,9 +226,66 @@ async function renderPacket() {
     ${tasksHtml}
 
     <h2 class="section-title">Stage-by-stage gaps, by path</h2>
-    <p class="section-note">Stages not yet marked Ready, across all three paths. This is a broader view than just the open leads above.</p>
+    <p class="section-note">Stages not yet marked Ready, across all three paths. Type an answer and save it directly with your passcode, or print this and fill it in by hand.</p>
     ${gapsHtml}
   `;
+
+  document.getElementById('global-passcode').addEventListener('input', e => {
+    window.__passcode = e.target.value;
+  });
+
+  document.querySelectorAll('.save-answer-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const block = btn.closest('.stage-gap');
+      const questionId = block.dataset.questionId;
+      const criteriaListId = block.dataset.criteriaListId || null;
+      const textarea = block.querySelector('.answer-input');
+      const statusEl = block.querySelector('.save-status');
+      const passcode = window.__passcode || '';
+
+      if (!passcode) {
+        statusEl.textContent = 'Enter your passcode above first.';
+        statusEl.className = 'save-status error';
+        return;
+      }
+      if (!textarea.value || textarea.value.trim().length < 5) {
+        statusEl.textContent = 'Write a real answer first (at least 5 characters).';
+        statusEl.className = 'save-status error';
+        return;
+      }
+
+      btn.disabled = true;
+      statusEl.textContent = 'Saving...';
+      statusEl.className = 'save-status';
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/submit_answer_with_passcode`, {
+          method: 'POST',
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            p_passcode: passcode,
+            p_site_id: siteId,
+            p_question_id: questionId,
+            p_answer_text: textarea.value,
+            p_criteria_list_id: criteriaListId
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          statusEl.textContent = `Saved as ${data.submitted_by}.`;
+          statusEl.className = 'save-status success';
+          block.classList.add('answer-saved');
+        } else {
+          statusEl.textContent = data.error || 'Something went wrong.';
+          statusEl.className = 'save-status error';
+        }
+      } catch (e) {
+        statusEl.textContent = 'Could not reach the server.';
+        statusEl.className = 'save-status error';
+      }
+      btn.disabled = false;
+    });
+  });
 }
 
 renderPacket().catch(e => { console.error(e); renderEmpty('Something went wrong generating this packet.'); });
