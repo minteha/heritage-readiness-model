@@ -494,11 +494,13 @@ async function renderSite() {
   const pendingCount = researchLeads.filter(l => l.is_pending_review).length;
   const leadsCount = researchLeads.filter(l => !l.is_pending_review).length;
   const approvedCount = siteAnswers.filter(a => a.status === 'ready').length + readyAssessmentAnswers.length;
+  const totalSourcesCount = siteEvidenceList ? siteEvidenceList.length : 0;
   const statsBarHtml = `
     <div class="stats-bar">
       <div class="stats-item"><span class="stats-num">${pendingCount}</span> pending review</div>
       <div class="stats-item"><span class="stats-num">${leadsCount}</span> open leads</div>
       <div class="stats-item"><span class="stats-num">${approvedCount}</span> approved answers</div>
+      <div class="stats-item"><span class="stats-num">${totalSourcesCount}</span> total sources in system</div>
     </div>`;
 
   // ---- Timeline: real dated facts, structured chronologically instead of
@@ -878,30 +880,79 @@ async function renderSite() {
         </div>`).join('')}</div>`
     : `<p class="qa-empty">No boundaries or features mapped yet.</p>`;
 
-  // ---- Photo gallery: real, properly-licensed photos only (CC BY 2.5 via
-  // PikiWiki Israel / Wikimedia Commons), never AI-generated -- this tool's
-  // credibility depends on evidence being real. All three current sites
-  // are Mi'ilya, so one shared set for now; if a genuinely different site
-  // is ever added, this should become a per-site lookup instead of one
-  // fixed array.
-  const MIILYA_GALLERY = [
-    { file: '117322 from above the crusader citadel PikiWiki Israel.jpg', caption: 'View from above the Crusader citadel', credit: 'PikiWiki Israel' },
-    { file: '122941 from the ancient winepress below the chateau resta PikiWiki Israel.jpg', caption: 'The ancient winepress below the castle', credit: 'PikiWiki Israel' },
-    { file: '112519 olive oil production in meylia PikiWiki Israel.jpg', caption: 'Olive oil production in Mi\u2019ilya', credit: 'PikiWiki Israel' },
-    { file: '117319 a traditional homemaker PikiWiki Israel.jpg', caption: 'A traditional homemaker, Mi\u2019ilya', credit: 'PikiWiki Israel' }
-  ];
-  const filePathUrl = filename => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(filename)}`;
-  const fileInfoUrl = filename => `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(filename)}`;
-  const galleryHtml = MIILYA_GALLERY.map(p => `
+  // ---- Photo gallery: real, properly-licensed photos only, sourced
+  // directly from Wikimedia Commons or the official UNESCO gallery pages
+  // for each case, never AI-generated -- this tool's credibility depends
+  // on evidence being real. Keyed by site_id so every case can eventually
+  // have its own real set.
+  const wikimediaUrl = filename => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(filename)}`;
+  const wikimediaInfoUrl = filename => `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(filename)}`;
+
+  const GALLERY_DATA = {
+    // Mi'ilya olive orchards
+    '85b8c3ba-812d-4aa6-a4ef-02664245a540': {
+      map: null,
+      photos: [
+        { url: wikimediaUrl('117322 from above the crusader citadel PikiWiki Israel.jpg'), infoUrl: wikimediaInfoUrl('117322 from above the crusader citadel PikiWiki Israel.jpg'), caption: 'View from above the Crusader citadel', credit: 'PikiWiki Israel, CC BY 2.5' },
+        { url: wikimediaUrl('122941 from the ancient winepress below the chateau resta PikiWiki Israel.jpg'), infoUrl: wikimediaInfoUrl('122941 from the ancient winepress below the chateau resta PikiWiki Israel.jpg'), caption: 'The ancient winepress below the castle', credit: 'PikiWiki Israel, CC BY 2.5' },
+        { url: wikimediaUrl('112519 olive oil production in meylia PikiWiki Israel.jpg'), infoUrl: wikimediaInfoUrl('112519 olive oil production in meylia PikiWiki Israel.jpg'), caption: 'Olive oil production in Mi\u2019ilya', credit: 'PikiWiki Israel, CC BY 2.5' },
+        { url: wikimediaUrl('117319 a traditional homemaker PikiWiki Israel.jpg'), infoUrl: wikimediaInfoUrl('117319 a traditional homemaker PikiWiki Israel.jpg'), caption: 'A traditional homemaker, Mi\u2019ilya', credit: 'PikiWiki Israel, CC BY 2.5' }
+      ]
+    },
+    // Sebastia (reference case)
+    '29909469-f425-4af7-b01a-5661dd25eee6': {
+      map: { url: 'https://whc.unesco.org/uploads/thumbs/1809_maps-125--20260807160008.webp', infoUrl: 'https://whc.unesco.org/document/226958', caption: 'Sebastia, maps of the inscribed property', credit: 'UNESCO World Heritage Centre, 2026' },
+      photos: [
+        { url: 'https://whc.unesco.org/uploads/thumbs/site_1809_0010-360-360-20260615170121.webp', infoUrl: 'https://whc.unesco.org/include/tool_image_bootstrap.cfm?id=226121&gallery=site&id_site=1809', caption: 'The Roman Theatre with the village of Sebastia in the background', credit: 'MoTA' },
+        { url: 'https://whc.unesco.org/uploads/thumbs/site_1809_0007-360-360-20260615170021.webp', infoUrl: 'https://whc.unesco.org/include/tool_image_bootstrap.cfm?id=226118&gallery=site&id_site=1809', caption: 'Part of the Colonnaded Street', credit: 'MoTA' },
+        { url: 'https://whc.unesco.org/uploads/thumbs/site_1809_0004-360-360-20260615165810.webp', infoUrl: 'https://whc.unesco.org/include/tool_image_bootstrap.cfm?id=226115&gallery=site&id_site=1809', caption: 'Cathedral of St John the Baptist / Mosque of the Prophet Yahya, interior', credit: 'Sebastia Municipality' }
+      ]
+    },
+    // Al-Mihrass (reference case), no map, consistent with the ICH nomination format
+    '5cc0de32-53e4-448e-a871-ac56482ae857': {
+      map: null,
+      photos: [
+        { url: 'https://ich.unesco.org/img/photo/thumb/18183-HUG.jpg?t=1783000187', infoUrl: 'https://ich.unesco.org/en/photo-pop-up-00973?photoID=18183', caption: 'Al-Mihrass tree: knowledge, skills and rituals associated with it', credit: 'Ministry of Culture, Jordan, 2024' },
+        { url: 'https://ich.unesco.org/img/photo/thumb/18185-HUG.jpg?t=1783000187', infoUrl: 'https://ich.unesco.org/en/photo-pop-up-00973?photoID=18185', caption: 'Al-Mihrass tree: knowledge, skills and rituals associated with it', credit: 'Ministry of Culture, Jordan, 2024' },
+        { url: 'https://ich.unesco.org/img/photo/thumb/18187-HUG.jpg?t=1783000188', infoUrl: 'https://ich.unesco.org/en/photo-pop-up-00973?photoID=18187', caption: 'Al-Mihrass tree: knowledge, skills and rituals associated with it', credit: 'Ministry of Culture, Jordan, 2024' },
+        { url: 'https://ich.unesco.org/img/photo/thumb/18189-HUG.jpg?t=1783000188', infoUrl: 'https://ich.unesco.org/en/photo-pop-up-00973?photoID=18189', caption: 'Al-Mihrass tree: knowledge, skills and rituals associated with it', credit: 'Ministry of Culture, Jordan, 2024' }
+      ]
+    },
+    // Turkish olive cultivation (reference case), no map, consistent with the ICH nomination format
+    '89d4d700-7ca4-47bb-a800-0d3ce78414ef': {
+      map: null,
+      photos: [
+        { url: 'https://ich.unesco.org/img/photo/thumb/16770-HUG.jpg?t=1782999987', infoUrl: 'https://ich.unesco.org/en/photo-pop-up-00973?photoID=16770', caption: 'Traditional knowledge, methods and practices concerning olive cultivation', credit: 'MoCT, 2022' },
+        { url: 'https://ich.unesco.org/img/photo/thumb/16771-HUG.jpg?t=1782999988', infoUrl: 'https://ich.unesco.org/en/photo-pop-up-00973?photoID=16771', caption: 'Traditional knowledge, methods and practices concerning olive cultivation', credit: 'Marmara Birlik, 2021' },
+        { url: 'https://ich.unesco.org/img/photo/thumb/16773-HUG.jpg?t=1782999988', infoUrl: 'https://ich.unesco.org/en/photo-pop-up-00973?photoID=16773', caption: 'Traditional knowledge, methods and practices concerning olive cultivation', credit: 'MoCT, 2022' },
+        { url: 'https://ich.unesco.org/img/photo/thumb/16778-HUG.jpg?t=1782999988', infoUrl: 'https://ich.unesco.org/en/photo-pop-up-00973?photoID=16778', caption: 'Traditional knowledge, methods and practices concerning olive cultivation', credit: 'MoCT, 2022' }
+      ]
+    },
+    // Serra de Tramuntana (reference case)
+    'ea9aeab3-d292-47ce-802e-f6063c4f6f3d': {
+      map: { url: 'https://whc.unesco.org/uploads/thumbs/Tramuntana Espagne-125--20111021155449.webp', infoUrl: 'https://whc.unesco.org/document/115549', caption: 'Map of the inscribed property, Cultural Landscape of the Serra de Tramuntana', credit: 'UNESCO World Heritage Centre, 2011' },
+      photos: [
+        { url: 'https://whc.unesco.org/uploads/thumbs/site_1371_0002-360-360-20231020113035.webp', infoUrl: 'https://whc.unesco.org/include/tool_image_bootstrap.cfm?id=115128&gallery=site&id_site=1371', caption: 'Valldemossa', credit: 'Marcos Molina' },
+        { url: 'https://whc.unesco.org/uploads/thumbs/site_1371_0003-360-360-20231020113036.webp', infoUrl: 'https://whc.unesco.org/include/tool_image_bootstrap.cfm?id=203851&gallery=site&id_site=1371', caption: 'Valldemossa', credit: 'Marcos Molina' },
+        { url: 'https://whc.unesco.org/uploads/thumbs/site_1371_0001-360-360-20110524110622.webp', infoUrl: 'https://whc.unesco.org/include/tool_image_bootstrap.cfm?id=115126&gallery=site&id_site=1371', caption: 'Dei\u00e0 \u2013 Llucalcari', credit: 'Marcos Molina' }
+      ]
+    }
+  };
+
+  const siteGallery = GALLERY_DATA[siteId];
+  const galleryHtml = siteGallery ? [
+      ...(siteGallery.map ? [{ ...siteGallery.map, isMap: true }] : []),
+      ...siteGallery.photos
+    ].map(p => `
     <figure class="gallery-item">
-      <button class="gallery-image-btn" onclick="openLightbox('${filePathUrl(p.file)}', '${p.caption.replace(/'/g, "\\'")}')">
-        <img src="${filePathUrl(p.file)}" alt="${p.caption}" loading="lazy" />
+      <button class="gallery-image-btn" onclick="openLightbox('${p.url}', '${p.caption.replace(/'/g, "\\'")}')">
+        <img src="${p.url}" alt="${p.caption}" loading="lazy" />
       </button>
       <figcaption>
-        <div class="gallery-title">${p.caption}</div>
-        <a href="${fileInfoUrl(p.file)}" target="_blank" rel="noopener" class="gallery-credit">${p.credit}, CC BY 2.5</a>
+        <div class="gallery-title">${p.isMap ? '\ud83d\uddfa\ufe0f ' : ''}${p.caption}</div>
+        <a href="${p.infoUrl}" target="_blank" rel="noopener" class="gallery-credit">${p.credit}</a>
       </figcaption>
-    </figure>`).join('');
+    </figure>`).join('') : '';
 
   document.getElementById('app').innerHTML = `
     <div class="hero ${site.is_reference_case ? 'hero-reference' : ''}">
@@ -936,7 +987,7 @@ async function renderSite() {
       </div>
     </div>` : ''}
 
-    ${!site.is_reference_case ? `
+    ${galleryHtml ? `
     <section class="gallery-section">
       <div class="wrap">
         <div class="photo-gallery">${galleryHtml}</div>

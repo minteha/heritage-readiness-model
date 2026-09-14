@@ -281,7 +281,13 @@
     top: 0;
     height: 100vh;
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
   }
+  .sidebar::-webkit-scrollbar { width: 6px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+  .sidebar::-webkit-scrollbar-thumb:hover { background: var(--ink-soft); }
   .sidebar h2 {
     font-size: 1.05rem;
     margin: 0 0 4px;
@@ -310,18 +316,35 @@
     margin-top: 2px;
   }
   .site-link-reference {
-    background: var(--stone-dim);
+    background: #F2F2F0;
     padding: 10px 10px;
     border-radius: 4px;
     border-bottom: 1px solid var(--line);
-    border-left: 3px solid var(--olive);
+    border-left: 3px solid #9B9B94;
     margin-bottom: 4px;
   }
   .reference-tag {
     display: block;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.65rem;
-    color: var(--olive-deep);
+    color: #7A7A73;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    margin-bottom: 3px;
+  }
+  .site-link-active {
+    background: #E6F7E9;
+    padding: 10px 10px;
+    border-radius: 4px;
+    border-bottom: 1px solid var(--line);
+    border-left: 3px solid #2EA84A;
+    margin-bottom: 4px;
+  }
+  .active-tag {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: #1F7A38;
     font-weight: 600;
     letter-spacing: 0.03em;
     margin-bottom: 3px;
@@ -345,6 +368,12 @@
     cursor: pointer; font-weight: 600; color: var(--olive-deep); font-style: normal;
   }
   .sidebar-note p { margin: 8px 0 0; }
+  .add-case-btn {
+    display: block; text-align: center; font-size: 0.85rem; font-weight: 600;
+    padding: 10px 14px; margin: 8px 0 18px; border: 1px dashed var(--olive);
+    border-radius: 4px; color: var(--olive-deep); text-decoration: none;
+  }
+  .add-case-btn:hover { background: var(--stone-dim); }
   .sidebar-error {
     font-size: 0.85rem;
     color: var(--clay);
@@ -561,14 +590,18 @@ async function loadSites() {
 
     container.innerHTML = '';
     const activeSites = sites.filter(s => !s.is_reference_case);
+    // Olive orchards are our actual primary nomination target, shown first.
+    const PRIMARY_SITE_ID = '85b8c3ba-812d-4aa6-a4ef-02664245a540';
+    activeSites.sort((a, b) => (a.site_id === PRIMARY_SITE_ID ? -1 : b.site_id === PRIMARY_SITE_ID ? 1 : 0));
     const referenceSites = sites.filter(s => s.is_reference_case);
 
     activeSites.forEach(s => {
       const a = document.createElement('a');
-      a.className = 'site-link';
+      a.className = 'site-link site-link-active';
       a.href = `site.html?site=${encodeURIComponent(s.site_id)}`;
       const region = [s.region, s.country].filter(Boolean).join(', ');
       a.innerHTML = `
+        <span class="active-tag">ACTIVE STUDY CASE</span>
         <div class="site-name">${escapeHtml(s.name)}</div>
         ${region ? `<div class="site-region">${escapeHtml(region)}</div>` : ''}
       `;
@@ -582,11 +615,17 @@ async function loadSites() {
         <details>
           <summary>Click here to learn why we added three study cases for Mi'ilya</summary>
           <p style="margin-top:8px;">It depends entirely on the actual nomination goal. Is the target UNESCO recognition for Mi'ilya as a whole, winery and olive orchards together as one integrated landscape? Or specifically the living olive tradition alone, separate from the castle and winery heritage? These are genuinely different claims, needing different evidence.</p>
-          <p>The olive orchards are our actual primary target, following Al-Mihrass's precedent. The winery case documents a genuinely different, well-evidenced heritage track kept separate for now. The combined case is a conditional fallback, only becoming our real strategy if evidence shows the two systems were historically managed as one, not just coexisting in the same village.</p>
+          <p>The olive orchards are our actual primary target, following Al-Mihrass's precedent. The winery case documents a genuinely different, well-evidenced heritage track kept separate for now. The combined case is a conditional fallback, only becoming our real strategy if evidence shows the two systems were historically managed together as one integrated system.</p>
         </details>
       `;
       container.appendChild(note);
     }
+
+    const addCaseLink = document.createElement('a');
+    addCaseLink.className = 'add-case-btn';
+    addCaseLink.href = 'add-study-case.html';
+    addCaseLink.innerHTML = '+ Add New Study Case';
+    container.appendChild(addCaseLink);
 
     referenceSites.forEach(s => {
       const a = document.createElement('a');
