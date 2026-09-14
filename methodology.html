@@ -12,6 +12,32 @@
     --olive: #6B7A5E; --olive-deep: #4F5C45; --gold: #B8933A; --line: rgba(35,38,31,0.14);
   }
   * { box-sizing: border-box; }
+  .page-shell { display: flex; align-items: flex-start; }
+  .sidebar {
+    width: 260px; flex-shrink: 0; background: #fff; border-right: 1px solid var(--line);
+    padding: 28px 22px; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    scrollbar-width: thin; scrollbar-color: var(--line) transparent;
+  }
+  .sidebar::-webkit-scrollbar { width: 6px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+  .sidebar::-webkit-scrollbar-thumb:hover { background: var(--ink-soft); }
+  .sidebar h2 { font-size: 1.05rem; margin: 0 0 4px; font-family: 'Fraunces', serif; color: var(--ink); }
+  .sidebar .sidebar-sub { font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 20px; }
+  .site-link { display: block; padding: 10px 0; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); }
+  .site-link:last-child { border-bottom: none; }
+  .site-link .site-name { font-weight: 500; font-size: 0.94rem; }
+  .site-link .site-region { font-size: 0.8rem; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; margin-top: 2px; }
+  .site-link-reference { background: #F2F2F0; padding: 10px 10px; border-radius: 4px; border-bottom: 1px solid var(--line); border-left: 3px solid #9B9B94; margin-bottom: 4px; }
+  .reference-tag { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: #7A7A73; font-weight: 600; letter-spacing: 0.03em; margin-bottom: 3px; }
+  .site-link-active { background: #E6F7E9; padding: 10px 10px; border-radius: 4px; border-bottom: 1px solid var(--line); border-left: 3px solid #2EA84A; margin-bottom: 4px; }
+  .active-tag { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: #1F7A38; font-weight: 600; letter-spacing: 0.03em; margin-bottom: 3px; }
+  .site-link-current { outline: 2px solid var(--ink); outline-offset: -2px; }
+  .add-case-btn { display: block; text-align: center; font-size: 0.85rem; font-weight: 600; padding: 10px 14px; margin: 8px 0 18px; border: 1px dashed var(--olive); border-radius: 4px; color: var(--olive-deep); text-decoration: none; }
+  .add-case-btn:hover { background: var(--stone-dim); }
+  .sidebar-error, .sidebar-empty { font-size: 0.85rem; color: var(--ink-soft); }
+  .main-col { flex: 1; min-width: 0; }
+  @media (max-width: 760px) { .page-shell { display: block; } .sidebar { position: static; height: auto; width: auto; border-right: none; border-bottom: 1px solid var(--line); } }
   body { margin: 0; background: #fff; color: var(--ink); font-family: 'IBM Plex Sans', sans-serif; line-height: 1.6; font-size: 17px; }
   h1, h2, h3, .display { font-family: 'Fraunces', serif; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
   .mono { font-family: 'IBM Plex Mono', monospace; }
@@ -61,6 +87,16 @@
 </head>
 <body>
 
+<div class="page-shell">
+<aside class="sidebar">
+  <h2>Case Studies</h2>
+  <p class="sidebar-sub">All sites assessed with this model.</p>
+  <div id="site-list">
+    <p class="mono" style="font-size:0.82rem; color:var(--ink-soft);">Loading&hellip;</p>
+  </div>
+</aside>
+<div class="main-col">
+
 <div class="topnav">
   <div class="wrap">
     <a class="back" href="index.html">&larr; Methodology overview</a>
@@ -87,20 +123,20 @@
 <section class="alt">
   <div class="wrap">
     <h2 class="section-title">What the model actually does</h2>
-    <p class="lede">Three things, working together, not three separate features.</p>
+    <p class="lede">Three things, working together.</p>
     <h3 class="sub-title">It routes a site to the right path</h3>
     <p>World Heritage, ICH Representative, and ICH Urgent Safeguarding are three different conventions with three different bars to clear. The model tracks a site against all three simultaneously, and is honest when the strongest path isn't the one with the highest percentage, a single failed gatekeeper (missing community consent, for example) overrides everything else.</p>
     <h3 class="sub-title">It tells you what's missing, specifically</h3>
-    <p>Not "40% complete." A real, generated summary: which stages are fully documented, which have never been touched, and, for each unanswered question, what a genuinely strong answer would actually contain, pulled directly from the same guidance UNESCO reviewers themselves use.</p>
+    <p>A real, generated summary: which stages are fully documented, which have never been touched, and, for each unanswered question, what a genuinely strong answer would actually contain, pulled directly from the same guidance UNESCO reviewers themselves use.</p>
     <h3 class="sub-title">It tells the difference between a lead and evidence</h3>
-    <p>A newspaper mention is not the same as a verified citation. Every piece of information in this model carries an honest tier, verified, lead, or genuinely unread, and a lead can never on its own mark a question Ready. This discipline is the difference between a model that looks complete and one that actually is.</p>
+    <p>Every piece of information in this model carries an honest tier: verified, lead, or genuinely unread. A newspaper article, a photograph, or a documentary can still be exactly the thing that leads to a real breakthrough, so leads are tracked seriously, right alongside verified evidence, just tagged for what they currently are. A question only moves to Ready once real, verified evidence backs it.</p>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <h2 class="section-title">Why these four reference cases, specifically</h2>
-    <p class="lede">Not chosen as interesting examples. Each was reverse-engineered from a real, specific question Mi'ilya's own case raised, then studied from primary sources, the actual nomination dossiers and Committee decisions, not secondhand summaries, to find out what a real reviewer actually asked for.</p>
+    <h2 class="section-title">Why did we choose these four case studies for Mi'ilya?</h2>
+    <p class="lede">Each was reverse-engineered from a real, specific question Mi'ilya's own case raised, then studied from primary sources: the actual nomination dossiers and Committee decisions, to find out what a real reviewer actually asked for.</p>
     <div class="comparator-grid">
       <div class="comparator-card">
         <span class="tag">ICH Representative</span>
@@ -128,9 +164,37 @@
 
 <section class="alt">
   <div class="wrap">
-    <h2 class="section-title">An AI-assisted research workflow, not automatic data entry</h2>
+    <h2 class="section-title">An AI-assisted research workflow</h2>
     <p class="lede">The model doesn't ask a community to type facts into a form and hope for the best. Real primary sources, nomination dossiers, Committee decisions, academic papers, are read directly, extracted, tagged with an honest confidence tier, and cited. When a written recommendation doesn't exist yet for a path, the model generates one from the real underlying data rather than leaving a blank.</p>
-    <p>This is the actual answer to a real question worth asking directly: can this model do the reading and analysis itself, not just hold a folder of files? Within a supervised, source-checked workflow, yes, this is what happened across every reference case in this project.</p>
+    <p>This is the actual answer to a real question worth asking directly: can this model actively read and analyze sources itself? Within a supervised, source-checked workflow, yes, this is what happened across every reference case in this project.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2 class="section-title">The pages, and what each one is for</h2>
+    <p class="lede">This model is a small set of tools, each built for a specific real moment in the work.</p>
+
+    <h3 class="sub-title">The case study page</h3>
+    <p>One place to see a whole site: its history, its evidence, and how it stands across all three UNESCO paths at once. This is where the actual assessment lives, and where the auto-generated summaries and checklists give a real, honest snapshot at a glance.</p>
+
+    <h3 class="sub-title">The path page</h3>
+    <p>A deeper view into one specific path, criterion by criterion. Built for the moment someone wants to focus entirely on, say, the ICH Representative List, without the other two paths taking up space.</p>
+
+    <h3 class="sub-title">The field research packet</h3>
+    <p>Turns "what's missing" into an actual list someone can act on: sorted by priority, printable for the field, or saved directly online with a passcode. Built for the researcher standing in the orchard with real questions to answer.</p>
+
+    <h3 class="sub-title">Interview mode</h3>
+    <p>A generated script for one real conversation. Built around a simple idea: a single interview with the right person can resolve many open questions at once, so the script gathers everything that one conversation could genuinely cover.</p>
+
+    <h3 class="sub-title">Submit evidence</h3>
+    <p>A secure, passcode-protected way to add a real lead directly into the system, reviewed before it's treated as confirmed. Built so anyone can contribute a lead directly, with real database access reserved for the review step.</p>
+
+    <h3 class="sub-title">Add new study case</h3>
+    <p>The model's own growth path, built directly into itself. A name, some general information, and a place to paste anything at all, articles, links, rough notes, becomes a real pending submission, ready to be reviewed and turned into a properly structured case.</p>
+
+    <h3 class="sub-title">The timeline</h3>
+    <p>Real dated facts, shown as an actual chronology instead of sitting buried inside paragraphs. Built directly from a reviewer's own suggestion that a visual timeline would help.</p>
   </div>
 </section>
 
@@ -138,12 +202,12 @@
   <div class="wrap">
     <h2 class="section-title">Where this can go</h2>
     <div class="growth-box">
-      <p>Nothing in this model is Mi'ilya-specific. The stage structure, the evidence discipline, the auto-generated summaries, and the three-path guidance were built to onboard any orchard or heritage-tree site, anywhere, olive, date palm, fig, pomegranate, grapevine, and walk it through the same rigorous path toward UNESCO readiness. Mi'ilya is the first real case this framework was built against, not the limit of what it can hold.</p>
+      <p>This model can grow well beyond Mi'ilya. The stage structure, the evidence discipline, the auto-generated summaries, and the three-path guidance were built to onboard any orchard or heritage-tree site, anywhere, olive, date palm, fig, pomegranate, grapevine, and walk it through the same rigorous path toward UNESCO readiness. Mi'ilya is the first real case this framework was built against, and a foundation for everything it can hold next.</p>
     </div>
     <ul class="plain" style="margin-top:24px;">
-      <li>A new site is one row in the database, not a schema change.</li>
+      <li>A new site is one row in the database, added without touching the schema.</li>
       <li>The same sixteen stages, the same evidence-tier discipline, and the same auto-generated guidance apply immediately.</li>
-      <li>A research team studying multiple heritage-tree sites could use this as a shared, standing readiness tracker across all of them at once, not a one-off tool built for a single case.</li>
+      <li>A research team studying multiple heritage-tree sites could use this as a shared, standing readiness tracker across every one of them at once.</li>
     </ul>
   </div>
 </section>
@@ -154,6 +218,77 @@
     <a href="https://github.com/minteha/heritage-readiness-model" class="mono">github.com/minteha/heritage-readiness-model</a>
   </div>
 </footer>
+
+</div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://dntqhsrxbmhdbfyqnimk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRudHFoc3J4Ym1oZGJmeXFuaW1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTk1NTIsImV4cCI6MjEwNDQ3NTU1Mn0.SyxoJflfFLX3UkqK7HKaJES2DGdjuI5BjnWz3YYIsiE';
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+async function loadSidebarSites() {
+  const container = document.getElementById('site-list');
+  const currentSiteId = new URLSearchParams(window.location.search).get('site');
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/sites?select=*&order=is_reference_case.asc,name.asc`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!res.ok) throw new Error('fetch failed');
+    const sites = await res.json();
+    if (!sites.length) {
+      container.innerHTML = '<p class="sidebar-empty">No case studies yet.</p>';
+      return;
+    }
+    container.innerHTML = '';
+    const activeSites = sites.filter(s => !s.is_reference_case);
+    // Olive orchards are our actual primary nomination target, shown first.
+    const PRIMARY_SITE_ID = '85b8c3ba-812d-4aa6-a4ef-02664245a540';
+    activeSites.sort((a, b) => (a.site_id === PRIMARY_SITE_ID ? -1 : b.site_id === PRIMARY_SITE_ID ? 1 : 0));
+    const referenceSites = sites.filter(s => s.is_reference_case);
+
+    activeSites.forEach(s => {
+      const a = document.createElement('a');
+      a.className = `site-link site-link-active${s.site_id === currentSiteId ? ' site-link-current' : ''}`;
+      a.href = `site.html?site=${encodeURIComponent(s.site_id)}`;
+      const region = [s.region, s.country].filter(Boolean).join(', ');
+      a.innerHTML = `
+        <span class="active-tag">ACTIVE STUDY CASE</span>
+        <div class="site-name">${escapeHtml(s.name)}</div>
+        ${region ? `<div class="site-region">${escapeHtml(region)}</div>` : ''}
+      `;
+      container.appendChild(a);
+    });
+
+    const addCaseLink = document.createElement('a');
+    addCaseLink.className = 'add-case-btn';
+    addCaseLink.href = 'add-study-case.html';
+    addCaseLink.innerHTML = '+ Add New Study Case';
+    container.appendChild(addCaseLink);
+
+    referenceSites.forEach(s => {
+      const a = document.createElement('a');
+      a.className = `site-link site-link-reference${s.site_id === currentSiteId ? ' site-link-current' : ''}`;
+      a.href = `site.html?site=${encodeURIComponent(s.site_id)}`;
+      const region = [s.region, s.country].filter(Boolean).join(', ');
+      a.innerHTML = `
+        <span class="reference-tag">COMPLETE STUDY CASE</span>
+        <div class="site-name">${escapeHtml(s.name)}</div>
+        ${region ? `<div class="site-region">${escapeHtml(region)}</div>` : ''}
+      `;
+      container.appendChild(a);
+    });
+  } catch (e) {
+    container.innerHTML = '<p class="sidebar-error">Could not load case studies.</p>';
+    console.error(e);
+  }
+}
+loadSidebarSites();
+</script>
 
 </body>
 </html>

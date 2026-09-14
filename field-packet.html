@@ -9,11 +9,39 @@
 <style>
   :root {
     --ink: #23261F; --ink-soft: #4A4E42; --line: #D8D2C2; --gold: #B8933A; --olive-deep: #4F5C45;
+    --olive: #6B7A5E; --stone-dim: #E1DACB; --alert: #A13D2E;
   }
   * { box-sizing: border-box; }
+  .page-shell { display: flex; align-items: flex-start; }
+  .sidebar {
+    width: 260px; flex-shrink: 0; background: #fff; border-right: 1px solid var(--line);
+    padding: 28px 22px; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    scrollbar-width: thin; scrollbar-color: var(--line) transparent;
+  }
+  .sidebar::-webkit-scrollbar { width: 6px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+  .sidebar::-webkit-scrollbar-thumb:hover { background: var(--ink-soft); }
+  .sidebar h2 { font-size: 1.05rem; margin: 0 0 4px; font-family: 'Fraunces', serif; color: var(--ink); }
+  .sidebar .sidebar-sub { font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 20px; }
+  .site-link { display: block; padding: 10px 0; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); }
+  .site-link:last-child { border-bottom: none; }
+  .site-link .site-name { font-weight: 500; font-size: 0.94rem; }
+  .site-link .site-region { font-size: 0.8rem; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; margin-top: 2px; }
+  .site-link-reference { background: #F2F2F0; padding: 10px 10px; border-radius: 4px; border-bottom: 1px solid var(--line); border-left: 3px solid #9B9B94; margin-bottom: 4px; }
+  .reference-tag { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: #7A7A73; font-weight: 600; letter-spacing: 0.03em; margin-bottom: 3px; }
+  .site-link-active { background: #E6F7E9; padding: 10px 10px; border-radius: 4px; border-bottom: 1px solid var(--line); border-left: 3px solid #2EA84A; margin-bottom: 4px; }
+  .active-tag { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: #1F7A38; font-weight: 600; letter-spacing: 0.03em; margin-bottom: 3px; }
+  .site-link-current { outline: 2px solid var(--ink); outline-offset: -2px; }
+  .add-case-btn { display: block; text-align: center; font-size: 0.85rem; font-weight: 600; padding: 10px 14px; margin: 8px 0 18px; border: 1px dashed var(--olive); border-radius: 4px; color: var(--olive-deep); text-decoration: none; }
+  .add-case-btn:hover { background: var(--stone-dim); }
+  .sidebar-error, .sidebar-empty { font-size: 0.85rem; color: var(--ink-soft); }
+  .main-col { flex: 1; min-width: 0; max-width: 780px; margin: 0 auto; padding: 40px 24px 80px; }
+  @media (max-width: 760px) { .page-shell { display: block; } .sidebar { position: static; height: auto; width: auto; border-right: none; border-bottom: 1px solid var(--line); } }
+  @media print { .sidebar { display: none; } .main-col { max-width: 100%; margin: 0; } }
   body {
     font-family: 'IBM Plex Sans', sans-serif; color: var(--ink); background: #fff;
-    max-width: 780px; margin: 0 auto; padding: 40px 24px 80px;
+    margin: 0;
   }
   h1 { font-family: 'Fraunces', serif; font-size: 1.9rem; margin: 0 0 4px; }
   .packet-header {
@@ -65,14 +93,14 @@
 
   @media print {
     .toolbar { display: none; }
-    body { padding: 0 10px; max-width: 100%; }
+    .main-col { padding: 0 10px; }
     .task-item, .stage-gap { border-color: #999; }
     .packet-header {
       background: none; margin: 0 0 20px; padding: 0; border-bottom: 2px solid #333;
     }
     .packet-header h1 { color: var(--ink); }
     .packet-header .meta-line { color: var(--ink-soft); }
-    .passcode-bar, .answer-controls { display: none; }
+    .passcode-bar, .answer-controls, .print-cta { display: none; }
     .answer-input { border: none; border-bottom: 1px solid #999; height: 70px; resize: none; }
   }
   .passcode-bar {
@@ -84,6 +112,16 @@
     font-family: 'IBM Plex Sans', sans-serif; font-size: 0.9rem;
   }
   .passcode-hint { font-size: 0.78rem; color: var(--ink-soft); margin: 6px 0 0; }
+  .print-cta {
+    margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); text-align: center;
+  }
+  .print-cta button {
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 0.95rem; font-weight: 600;
+    padding: 12px 24px; border-radius: 4px; border: 1px solid var(--olive-deep); background: #fff;
+    color: var(--olive-deep); cursor: pointer;
+  }
+  .print-cta button:hover { background: var(--stone-dim); }
+  .print-cta-hint { font-size: 0.8rem; color: var(--ink-soft); margin-top: 8px; }
   .answer-input {
     width: 100%; font-family: 'IBM Plex Sans', sans-serif; font-size: 0.9rem;
     padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; resize: vertical;
@@ -102,8 +140,19 @@
 </style>
 </head>
 <body>
+<div class="page-shell">
+<aside class="sidebar">
+  <h2>Case Studies</h2>
+  <p class="sidebar-sub">All sites assessed with this model.</p>
+  <div id="site-list">
+    <p class="mono" style="font-size:0.82rem; color:var(--ink-soft);">Loading&hellip;</p>
+  </div>
+</aside>
+<div class="main-col">
 <div id="app">
   <p>Loading&hellip;</p>
+</div>
+</div>
 </div>
 
 <script>
@@ -147,7 +196,7 @@ async function renderPacket() {
   const sortedLeads = [...leads].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
 
   const tasksHtml = sortedLeads.length ? sortedLeads.map(l => `
-    <div class="task-item">
+    <div class="task-item" data-lead-id="${l.lead_id}">
       <span class="task-priority">${PRIORITY_LABEL[l.priority] || l.priority.toUpperCase()}</span>
       <p class="task-desc">${l.description}</p>
       ${l.confirmation_action ? `<p class="task-action"><span class="label">TO CONFIRM:</span> ${l.confirmation_action}</p>` : ''}
@@ -156,12 +205,11 @@ async function renderPacket() {
         <ul class="checklist">${l.related_data_needs.map(n => `<li>${n}</li>`).join('')}</ul>
       ` : ''}
       <div class="notes-label">FINDINGS / NOTES:</div>
-      <div class="notes-line"></div>
-      <div class="notes-line"></div>
-      <div class="notes-line"></div>
-      <div class="notes-line"></div>
-      <div class="notes-line"></div>
-      <div class="notes-line"></div>
+      <textarea class="answer-input lead-notes-input" rows="3" placeholder="Type what you found here...">${l.resolution_notes || ''}</textarea>
+      <div class="answer-controls">
+        <button class="save-lead-notes-btn">Save these notes</button>
+        <span class="save-status">${l.notes_submitted_by ? `Last saved by ${l.notes_submitted_by}.` : ''}</span>
+      </div>
     </div>
   `).join('') : `<p class="empty-note">No open items to investigate right now, nothing to print for this section.</p>`;
 
@@ -207,27 +255,31 @@ async function renderPacket() {
   document.getElementById('app').innerHTML = `
     <div class="packet-header">
       <h1>Field Research Packet</h1>
-      <div class="meta-line">${site.name} · Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+      <div class="meta-line">${site.name} \u00b7 Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
     </div>
 
     <div class="toolbar">
-      <button onclick="window.print()">Print / Save as PDF</button>
       <a class="secondary" href="site.html?site=${siteId}">&larr; Back to case study</a>
     </div>
 
     <div class="passcode-bar">
       <label for="global-passcode">Your passcode, to save answers directly into the system</label>
       <input type="password" id="global-passcode" autocomplete="off" placeholder="Enter your passcode to enable saving">
-      <p class="passcode-hint">You can still print and fill this in by hand without a passcode. Entering one lets you save answers directly instead.</p>
+      <p class="passcode-hint">Type your answers directly below, they save straight into the system as you go.</p>
     </div>
 
+    <h2 class="section-title">Stage-by-stage gaps, by path</h2>
+    <p class="section-note">Stages not yet marked Ready, across all three paths. Type an answer and save it directly with your passcode.</p>
+    ${gapsHtml}
+
     <h2 class="section-title">Open items to confirm</h2>
-    <p class="section-note">Sorted by priority. Each item includes what would confirm it, and, where one visit can resolve several things at once, everything else worth asking while you're there. Write findings directly below each item, then bring this back and share it.</p>
+    <p class="section-note">Sorted by priority. Each item includes what would confirm it, and, where one visit can resolve several things at once, everything else worth asking while you're there. Type findings directly and save them, or bring notes back and add them here afterward.</p>
     ${tasksHtml}
 
-    <h2 class="section-title">Stage-by-stage gaps, by path</h2>
-    <p class="section-note">Stages not yet marked Ready, across all three paths. Type an answer and save it directly with your passcode, or print this and fill it in by hand.</p>
-    ${gapsHtml}
+    <div class="print-cta">
+      <button onclick="window.print()">Generate print version</button>
+      <p class="print-cta-hint">Produces a paper-friendly copy of everything above, for taking into the field without a screen.</p>
+    </div>
   `;
 
   document.getElementById('global-passcode').addEventListener('input', e => {
@@ -286,9 +338,121 @@ async function renderPacket() {
       btn.disabled = false;
     });
   });
+
+  document.querySelectorAll('.save-lead-notes-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const item = btn.closest('.task-item');
+      const leadId = item.dataset.leadId;
+      const textarea = item.querySelector('.lead-notes-input');
+      const statusEl = item.querySelector('.save-status');
+      const passcode = window.__passcode || '';
+
+      if (!passcode) {
+        statusEl.textContent = 'Enter your passcode above first.';
+        statusEl.className = 'save-status error';
+        return;
+      }
+      if (!textarea.value || textarea.value.trim().length < 5) {
+        statusEl.textContent = 'Write real notes first (at least 5 characters).';
+        statusEl.className = 'save-status error';
+        return;
+      }
+
+      btn.disabled = true;
+      statusEl.textContent = 'Saving...';
+      statusEl.className = 'save-status';
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/submit_lead_notes_with_passcode`, {
+          method: 'POST',
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ p_passcode: passcode, p_lead_id: leadId, p_notes: textarea.value })
+        });
+        const data = await res.json();
+        if (data.success) {
+          statusEl.textContent = `Saved as ${data.submitted_by}.`;
+          statusEl.className = 'save-status success';
+          item.classList.add('answer-saved');
+        } else {
+          statusEl.textContent = data.error || 'Something went wrong.';
+          statusEl.className = 'save-status error';
+        }
+      } catch (e) {
+        statusEl.textContent = 'Could not reach the server.';
+        statusEl.className = 'save-status error';
+      }
+      btn.disabled = false;
+    });
+  });
 }
 
 renderPacket().catch(e => { console.error(e); renderEmpty('Something went wrong generating this packet.'); });
+
+// Shared sidebar, present on every page so switching between case studies
+// never requires a trip back to the homepage. Self-contained since this
+// file doesn't share a top-level getParam/headers helper.
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+async function loadSidebarSites() {
+  const container = document.getElementById('site-list');
+  const currentSiteId = new URLSearchParams(window.location.search).get('site');
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/sites?select=*&order=is_reference_case.asc,name.asc`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!res.ok) throw new Error('fetch failed');
+    const sites = await res.json();
+    if (!sites.length) {
+      container.innerHTML = '<p class="sidebar-empty">No case studies yet.</p>';
+      return;
+    }
+    container.innerHTML = '';
+    const activeSites = sites.filter(s => !s.is_reference_case);
+    // Olive orchards are our actual primary nomination target, shown first.
+    const PRIMARY_SITE_ID = '85b8c3ba-812d-4aa6-a4ef-02664245a540';
+    activeSites.sort((a, b) => (a.site_id === PRIMARY_SITE_ID ? -1 : b.site_id === PRIMARY_SITE_ID ? 1 : 0));
+    const referenceSites = sites.filter(s => s.is_reference_case);
+
+    activeSites.forEach(s => {
+      const a = document.createElement('a');
+      a.className = `site-link site-link-active${s.site_id === currentSiteId ? ' site-link-current' : ''}`;
+      a.href = `site.html?site=${encodeURIComponent(s.site_id)}`;
+      const region = [s.region, s.country].filter(Boolean).join(', ');
+      a.innerHTML = `
+        <span class="active-tag">ACTIVE STUDY CASE</span>
+        <div class="site-name">${escapeHtml(s.name)}</div>
+        ${region ? `<div class="site-region">${escapeHtml(region)}</div>` : ''}
+      `;
+      container.appendChild(a);
+    });
+
+    const addCaseLink = document.createElement('a');
+    addCaseLink.className = 'add-case-btn';
+    addCaseLink.href = 'add-study-case.html';
+    addCaseLink.innerHTML = '+ Add New Study Case';
+    container.appendChild(addCaseLink);
+
+    referenceSites.forEach(s => {
+      const a = document.createElement('a');
+      a.className = `site-link site-link-reference${s.site_id === currentSiteId ? ' site-link-current' : ''}`;
+      a.href = `site.html?site=${encodeURIComponent(s.site_id)}`;
+      const region = [s.region, s.country].filter(Boolean).join(', ');
+      a.innerHTML = `
+        <span class="reference-tag">COMPLETE STUDY CASE</span>
+        <div class="site-name">${escapeHtml(s.name)}</div>
+        ${region ? `<div class="site-region">${escapeHtml(region)}</div>` : ''}
+      `;
+      container.appendChild(a);
+    });
+  } catch (e) {
+    container.innerHTML = '<p class="sidebar-error">Could not load case studies.</p>';
+    console.error(e);
+  }
+}
+loadSidebarSites();
 </script>
 </body>
 </html>

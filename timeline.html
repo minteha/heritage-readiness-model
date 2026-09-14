@@ -9,12 +9,38 @@
 <style>
   :root {
     --ink: #23261F; --ink-soft: #4A4E42; --line: #D8D2C2; --gold: #B8933A;
-    --olive-deep: #4F5C45; --olive: #6B7A5E; --stone-dim: #E1DACB;
+    --olive-deep: #4F5C45; --olive: #6B7A5E; --stone-dim: #E1DACB; --alert: #A13D2E;
   }
   * { box-sizing: border-box; }
+  .page-shell { display: flex; align-items: flex-start; }
+  .sidebar {
+    width: 260px; flex-shrink: 0; background: #fff; border-right: 1px solid var(--line);
+    padding: 28px 22px; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    scrollbar-width: thin; scrollbar-color: var(--line) transparent;
+  }
+  .sidebar::-webkit-scrollbar { width: 6px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+  .sidebar::-webkit-scrollbar-thumb:hover { background: var(--ink-soft); }
+  .sidebar h2 { font-size: 1.05rem; margin: 0 0 4px; font-family: 'Fraunces', serif; color: var(--ink); }
+  .sidebar .sidebar-sub { font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 20px; }
+  .site-link { display: block; padding: 10px 0; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); }
+  .site-link:last-child { border-bottom: none; }
+  .site-link .site-name { font-weight: 500; font-size: 0.94rem; }
+  .site-link .site-region { font-size: 0.8rem; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; margin-top: 2px; }
+  .site-link-reference { background: #F2F2F0; padding: 10px 10px; border-radius: 4px; border-bottom: 1px solid var(--line); border-left: 3px solid #9B9B94; margin-bottom: 4px; }
+  .reference-tag { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: #7A7A73; font-weight: 600; letter-spacing: 0.03em; margin-bottom: 3px; }
+  .site-link-active { background: #E6F7E9; padding: 10px 10px; border-radius: 4px; border-bottom: 1px solid var(--line); border-left: 3px solid #2EA84A; margin-bottom: 4px; }
+  .active-tag { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: #1F7A38; font-weight: 600; letter-spacing: 0.03em; margin-bottom: 3px; }
+  .site-link-current { outline: 2px solid var(--ink); outline-offset: -2px; }
+  .add-case-btn { display: block; text-align: center; font-size: 0.85rem; font-weight: 600; padding: 10px 14px; margin: 8px 0 18px; border: 1px dashed var(--olive); border-radius: 4px; color: var(--olive-deep); text-decoration: none; }
+  .add-case-btn:hover { background: var(--stone-dim); }
+  .sidebar-error, .sidebar-empty { font-size: 0.85rem; color: var(--ink-soft); }
+  .main-col { flex: 1; min-width: 0; max-width: 720px; margin: 0 auto; padding: 0 24px 80px; }
+  @media (max-width: 760px) { .page-shell { display: block; } .sidebar { position: static; height: auto; width: auto; border-right: none; border-bottom: 1px solid var(--line); } }
   body {
     font-family: 'IBM Plex Sans', sans-serif; color: var(--ink); background: #fff;
-    max-width: 720px; margin: 0 auto; padding: 0 24px 80px;
+    margin: 0;
   }
   .page-header {
     background: linear-gradient(rgba(35,38,31,0.72), rgba(35,38,31,0.85)), url('miilya-olive-header.jpg');
@@ -45,7 +71,18 @@
 </style>
 </head>
 <body>
+<div class="page-shell">
+<aside class="sidebar">
+  <h2>Case Studies</h2>
+  <p class="sidebar-sub">All sites assessed with this model.</p>
+  <div id="site-list">
+    <p class="mono" style="font-size:0.82rem; color:var(--ink-soft);">Loading&hellip;</p>
+  </div>
+</aside>
+<div class="main-col">
 <div id="app"><p style="padding-top:40px;">Loading...</p></div>
+</div>
+</div>
 
 <script>
 const SUPABASE_URL = 'https://dntqhsrxbmhdbfyqnimk.supabase.co';
@@ -94,6 +131,71 @@ async function renderTimeline() {
   `;
 }
 renderTimeline().catch(e => { console.error(e); document.getElementById('app').innerHTML = '<p>Something went wrong loading this timeline.</p>'; });
+
+// Shared sidebar, present on every page so switching between case studies
+// never requires a trip back to the homepage.
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+async function loadSidebarSites() {
+  const container = document.getElementById('site-list');
+  const currentSiteId = new URLSearchParams(window.location.search).get('site');
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/sites?select=*&order=is_reference_case.asc,name.asc`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!res.ok) throw new Error('fetch failed');
+    const sites = await res.json();
+    if (!sites.length) {
+      container.innerHTML = '<p class="sidebar-empty">No case studies yet.</p>';
+      return;
+    }
+    container.innerHTML = '';
+    const activeSites = sites.filter(s => !s.is_reference_case);
+    // Olive orchards are our actual primary nomination target, shown first.
+    const PRIMARY_SITE_ID = '85b8c3ba-812d-4aa6-a4ef-02664245a540';
+    activeSites.sort((a, b) => (a.site_id === PRIMARY_SITE_ID ? -1 : b.site_id === PRIMARY_SITE_ID ? 1 : 0));
+    const referenceSites = sites.filter(s => s.is_reference_case);
+
+    activeSites.forEach(s => {
+      const a = document.createElement('a');
+      a.className = `site-link site-link-active${s.site_id === currentSiteId ? ' site-link-current' : ''}`;
+      a.href = `site.html?site=${encodeURIComponent(s.site_id)}`;
+      const region = [s.region, s.country].filter(Boolean).join(', ');
+      a.innerHTML = `
+        <span class="active-tag">ACTIVE STUDY CASE</span>
+        <div class="site-name">${escapeHtml(s.name)}</div>
+        ${region ? `<div class="site-region">${escapeHtml(region)}</div>` : ''}
+      `;
+      container.appendChild(a);
+    });
+
+    const addCaseLink = document.createElement('a');
+    addCaseLink.className = 'add-case-btn';
+    addCaseLink.href = 'add-study-case.html';
+    addCaseLink.innerHTML = '+ Add New Study Case';
+    container.appendChild(addCaseLink);
+
+    referenceSites.forEach(s => {
+      const a = document.createElement('a');
+      a.className = `site-link site-link-reference${s.site_id === currentSiteId ? ' site-link-current' : ''}`;
+      a.href = `site.html?site=${encodeURIComponent(s.site_id)}`;
+      const region = [s.region, s.country].filter(Boolean).join(', ');
+      a.innerHTML = `
+        <span class="reference-tag">COMPLETE STUDY CASE</span>
+        <div class="site-name">${escapeHtml(s.name)}</div>
+        ${region ? `<div class="site-region">${escapeHtml(region)}</div>` : ''}
+      `;
+      container.appendChild(a);
+    });
+  } catch (e) {
+    container.innerHTML = '<p class="sidebar-error">Could not load case studies.</p>';
+    console.error(e);
+  }
+}
+loadSidebarSites();
 </script>
 </body>
 </html>

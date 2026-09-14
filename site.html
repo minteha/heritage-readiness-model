@@ -41,10 +41,10 @@
   .site-link:last-child { border-bottom: none; }
   .site-link .site-name { font-weight: 500; font-size: 0.94rem; }
   .site-link .site-region { font-size: 0.8rem; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; margin-top: 2px; }
-  .site-link-reference { background: var(--stone-dim); padding: 10px 10px; border-radius: 4px; border-bottom: 1px solid var(--line); border-left: 3px solid var(--olive); margin-bottom: 4px; }
-  .reference-tag { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: var(--olive-deep); font-weight: 600; letter-spacing: 0.03em; margin-bottom: 3px; }
-  .site-link-active { background: var(--stone-dim); padding: 10px 10px; border-radius: 4px; border-bottom: 1px solid var(--line); border-left: 3px solid var(--gold); margin-bottom: 4px; }
-  .active-tag { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: #8B6F2E; font-weight: 600; letter-spacing: 0.03em; margin-bottom: 3px; }
+  .site-link-reference { background: #F2F2F0; padding: 10px 10px; border-radius: 4px; border-bottom: 1px solid var(--line); border-left: 3px solid #9B9B94; margin-bottom: 4px; }
+  .reference-tag { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: #7A7A73; font-weight: 600; letter-spacing: 0.03em; margin-bottom: 3px; }
+  .site-link-active { background: #E6F7E9; padding: 10px 10px; border-radius: 4px; border-bottom: 1px solid var(--line); border-left: 3px solid #2EA84A; margin-bottom: 4px; }
+  .active-tag { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: #1F7A38; font-weight: 600; letter-spacing: 0.03em; margin-bottom: 3px; }
   .site-link-current { outline: 2px solid var(--ink); outline-offset: -2px; }
   .add-case-btn { display: block; text-align: center; font-size: 0.85rem; font-weight: 600; padding: 10px 14px; margin: 8px 0 18px; border: 1px dashed var(--olive); border-radius: 4px; color: var(--olive-deep); text-decoration: none; }
   .add-case-btn:hover { background: var(--stone-dim); }
@@ -1064,6 +1064,9 @@ async function loadSidebarSites() {
     }
     container.innerHTML = '';
     const activeSites = sites.filter(s => !s.is_reference_case);
+    // Olive orchards are our actual primary nomination target, shown first.
+    const PRIMARY_SITE_ID = '85b8c3ba-812d-4aa6-a4ef-02664245a540';
+    activeSites.sort((a, b) => (a.site_id === PRIMARY_SITE_ID ? -1 : b.site_id === PRIMARY_SITE_ID ? 1 : 0));
     const referenceSites = sites.filter(s => s.is_reference_case);
 
     activeSites.forEach(s => {

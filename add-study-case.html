@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Submit Evidence - Heritage Readiness Model</title>
+<title>Add New Study Case - Heritage Readiness Model</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -51,16 +51,14 @@
   .page-header p { color: #E8E4D8; font-size: 0.92rem; margin: 0; max-width: 55ch; }
   label { display: block; font-size: 0.85rem; font-weight: 500; margin: 20px 0 6px; }
   label .req { color: var(--alert); }
-  input, textarea, select {
+  input, textarea {
     width: 100%; font-family: 'IBM Plex Sans', sans-serif; font-size: 0.95rem;
     padding: 10px 12px; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink);
   }
-  input:focus, textarea:focus, select:focus { outline: 2px solid var(--olive); outline-offset: 1px; }
-  textarea { min-height: 90px; resize: vertical; }
+  input:focus, textarea:focus { outline: 2px solid var(--olive); outline-offset: 1px; }
+  textarea { resize: vertical; }
   .hint { font-size: 0.78rem; color: var(--ink-soft); margin-top: 4px; }
-  .passcode-block {
-    background: var(--stone-dim); border-radius: 4px; padding: 16px; margin-top: 28px;
-  }
+  .passcode-block { background: var(--stone-dim); border-radius: 4px; padding: 16px; margin-top: 28px; }
   button {
     font-family: 'IBM Plex Sans', sans-serif; font-size: 0.95rem; font-weight: 600;
     padding: 12px 22px; border-radius: 4px; border: none; background: var(--gold); color: var(--ink);
@@ -76,6 +74,7 @@
     font-size: 0.82rem; color: var(--ink-soft); margin-top: 32px; padding-top: 16px;
     border-top: 1px solid var(--line); line-height: 1.5;
   }
+  .steps { font-size: 0.88rem; color: var(--ink-soft); line-height: 1.6; margin: 16px 0 0; padding-left: 20px; }
 </style>
 </head>
 <body>
@@ -89,34 +88,32 @@
 </aside>
 <div class="main-col">
   <div class="page-header">
-    <h1>Submit Evidence</h1>
-    <p>Add a real lead or source to a study case. Everything submitted here is reviewed before it's treated as confirmed evidence.</p>
+    <h1>Add New Study Case</h1>
+    <p>Propose a new heritage site for this model to assess, an orchard, a landscape, any traditional agricultural site.</p>
   </div>
 
-  <form id="evidence-form">
-    <label for="site-select">Which study case is this for? <span class="req">*</span></label>
-    <select id="site-select" required>
-      <option value="">Loading sites...</option>
-    </select>
+  <p class="steps">
+    <strong>How this works:</strong>
+    1. Give the site a real name and a general description.
+    2. Paste anything you have: article text, links, notes, a rough summary, no need to organize it first.
+    3. This becomes a pending submission, reviewed and turned into a properly structured case before it goes live, the same way every other piece of evidence in this project has been handled.
+  </p>
 
-    <label for="description">What is the evidence or lead? <span class="req">*</span></label>
-    <textarea id="description" required placeholder="e.g. an article, a document, something someone told you, a fact you found"></textarea>
-    <div class="hint">Describe it plainly. This becomes a research lead, reviewed before anything is marked as confirmed.</div>
+  <form id="case-form">
+    <label for="site-name">Site name <span class="req">*</span></label>
+    <input type="text" id="site-name" required placeholder="e.g. the olive terraces of...">
 
-    <label for="source">Source (a URL, or where this came from)</label>
-    <input type="text" id="source" placeholder="https://... or a citation">
+    <label for="general-info">General information</label>
+    <textarea id="general-info" rows="3" placeholder="Where it is, what makes it worth considering, roughly what you know so far"></textarea>
 
-    <label for="confirm-action">What would confirm this, if you know?</label>
-    <input type="text" id="confirm-action" placeholder="e.g. ask the family directly, check the original document">
-
-    <label for="pasted-content">Paste the full interview, notes, or article text (optional)</label>
-    <textarea id="pasted-content" style="min-height:160px;" placeholder="Paste the whole thing here, word for word. No need to summarize it yourself."></textarea>
-    <div class="hint">This gets reviewed alongside your description above, so paste as much as you have.</div>
+    <label for="raw-content">Paste everything you have</label>
+    <textarea id="raw-content" rows="10" placeholder="Paste article text, links, a rough history, anything at all. This gets reviewed and structured properly afterward, it doesn't need to be organized now."></textarea>
+    <div class="hint">The more you paste, the more this can actually get analyzed properly once reviewed.</div>
 
     <div class="passcode-block">
       <label for="passcode" style="margin-top:0;">Your passcode <span class="req">*</span></label>
       <input type="password" id="passcode" required autocomplete="off">
-      <div class="hint">Your own personal passcode also identifies you as the submitter.</div>
+      <div class="hint">Also identifies you as the submitter.</div>
     </div>
 
     <button type="submit" id="submit-btn">Submit for review</button>
@@ -126,7 +123,7 @@
   <a class="back-link" href="index.html">&larr; Back to Heritage Readiness Model</a>
 
   <div class="note">
-    Submissions here are not published automatically. They go into a review queue and are checked by hand before being treated as confirmed evidence, the same way every other source in this project has been handled.
+    Nothing here goes live automatically. A pending submission is reviewed, checked against real sources, and only then built into a properly structured case with its own stages and tracked evidence, matching the same standard every site in this project has been held to.
   </div>
 </div>
 </div>
@@ -135,22 +132,7 @@
 const SUPABASE_URL = 'https://dntqhsrxbmhdbfyqnimk.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRudHFoc3J4Ym1oZGJmeXFuaW1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTk1NTIsImV4cCI6MjEwNDQ3NTU1Mn0.SyxoJflfFLX3UkqK7HKaJES2DGdjuI5BjnWz3YYIsiE';
 
-async function loadSites() {
-  const select = document.getElementById('site-select');
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/sites?select=site_id,name&order=name.asc`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-    });
-    const sites = await res.json();
-    select.innerHTML = '<option value="">Choose a study case</option>' +
-      sites.map(s => `<option value="${s.site_id}">${s.name}</option>`).join('');
-  } catch (e) {
-    select.innerHTML = '<option value="">Could not load sites</option>';
-  }
-}
-loadSites();
-
-document.getElementById('evidence-form').addEventListener('submit', async (e) => {
+document.getElementById('case-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = document.getElementById('submit-btn');
   const result = document.getElementById('result');
@@ -159,39 +141,26 @@ document.getElementById('evidence-form').addEventListener('submit', async (e) =>
 
   const payload = {
     p_passcode: document.getElementById('passcode').value,
-    p_site_id: document.getElementById('site-select').value,
-    p_description: document.getElementById('description').value,
-    p_source_pointer: document.getElementById('source').value || null,
-    p_confirmation_action: document.getElementById('confirm-action').value || null,
-    p_pasted_content: document.getElementById('pasted-content').value || null
+    p_proposed_name: document.getElementById('site-name').value,
+    p_general_info: document.getElementById('general-info').value || null,
+    p_raw_content: document.getElementById('raw-content').value || null
   };
-
-  if (!payload.p_site_id) {
-    result.className = 'result error';
-    result.textContent = 'Choose a study case first.';
-    return;
-  }
 
   btn.disabled = true;
   btn.textContent = 'Submitting...';
 
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/submit_evidence_with_passcode`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/submit_study_case_with_passcode`, {
       method: 'POST',
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json'
-      },
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
     const data = await res.json();
 
     if (data.success) {
       result.className = 'result success';
-      result.textContent = `Submitted as ${data.submitted_by}. This is now in the review queue and will be checked before being treated as confirmed evidence.`;
-      document.getElementById('evidence-form').reset();
-      loadSites();
+      result.textContent = `Submitted as ${data.submitted_by}. This is now pending review, it will be checked and properly structured before appearing as a real case.`;
+      document.getElementById('case-form').reset();
     } else {
       result.className = 'result error';
       result.textContent = data.error || 'Something went wrong. Nothing was saved.';

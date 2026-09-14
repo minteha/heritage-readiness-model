@@ -15,6 +15,32 @@
     --path1-bg: #FFFFFF; --path2-bg: #EAF0E4; --path3-bg: #FBEADC;
   }
   * { box-sizing: border-box; }
+  .page-shell { display: flex; align-items: flex-start; }
+  .sidebar {
+    width: 260px; flex-shrink: 0; background: #fff; border-right: 1px solid var(--line);
+    padding: 28px 22px; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    scrollbar-width: thin; scrollbar-color: var(--line) transparent;
+  }
+  .sidebar::-webkit-scrollbar { width: 6px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+  .sidebar::-webkit-scrollbar-thumb:hover { background: var(--ink-soft); }
+  .sidebar h2 { font-size: 1.05rem; margin: 0 0 4px; font-family: 'Fraunces', serif; color: var(--ink); }
+  .sidebar .sidebar-sub { font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 20px; }
+  .site-link { display: block; padding: 10px 0; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); }
+  .site-link:last-child { border-bottom: none; }
+  .site-link .site-name { font-weight: 500; font-size: 0.94rem; }
+  .site-link .site-region { font-size: 0.8rem; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; margin-top: 2px; }
+  .site-link-reference { background: #F2F2F0; padding: 10px 10px; border-radius: 4px; border-bottom: 1px solid var(--line); border-left: 3px solid #9B9B94; margin-bottom: 4px; }
+  .reference-tag { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: #7A7A73; font-weight: 600; letter-spacing: 0.03em; margin-bottom: 3px; }
+  .site-link-active { background: #E6F7E9; padding: 10px 10px; border-radius: 4px; border-bottom: 1px solid var(--line); border-left: 3px solid #2EA84A; margin-bottom: 4px; }
+  .active-tag { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: #1F7A38; font-weight: 600; letter-spacing: 0.03em; margin-bottom: 3px; }
+  .site-link-current { outline: 2px solid var(--ink); outline-offset: -2px; }
+  .add-case-btn { display: block; text-align: center; font-size: 0.85rem; font-weight: 600; padding: 10px 14px; margin: 8px 0 18px; border: 1px dashed var(--olive); border-radius: 4px; color: var(--olive-deep); text-decoration: none; }
+  .add-case-btn:hover { background: var(--stone-dim); }
+  .sidebar-error, .sidebar-empty { font-size: 0.85rem; color: var(--ink-soft); }
+  .main-col { flex: 1; min-width: 0; }
+  @media (max-width: 760px) { .page-shell { display: block; } .sidebar { position: static; height: auto; width: auto; border-right: none; border-bottom: 1px solid var(--line); } }
   body { margin: 0; background: var(--stone); color: var(--ink); font-family: 'IBM Plex Sans', sans-serif; line-height: 1.55; font-size: 17px; }
   h1, h2, h3, .display { font-family: 'Fraunces', serif; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
   code, .mono { font-family: 'IBM Plex Mono', monospace; }
@@ -94,7 +120,9 @@
   .checklist-row.check-yes .check-mark { color: var(--olive-deep); }
   .checklist-row.check-no .check-mark { color: var(--ink-soft); opacity: 0.5; }
   .checklist-row.check-no .check-name { color: var(--ink-soft); }
+  .checklist-row.check-partial .check-name { color: var(--ink); }
   .checklist-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--ink-soft); letter-spacing: 0.03em; margin-bottom: 8px; }
+  .checklist-legend { display: flex; flex-wrap: wrap; gap: 4px 20px; font-size: 0.78rem; color: var(--ink-soft); margin-bottom: 12px; }
   .pending-review-tag {
     display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; font-weight: 600;
     color: var(--gold); border: 1px solid var(--gold); padding: 2px 8px; border-radius: 3px; margin-bottom: 6px;
@@ -131,6 +159,8 @@
   .feedback-box .generated { font-size: 0.8rem; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; margin-bottom: 10px; }
   .feedback-box .text { font-size: 0.96rem; }
   .summary-para { font-size: 0.96rem; color: var(--ink); margin: 0 0 12px; line-height: 1.65; }
+  .summary-numbered-list { margin: 0 0 12px; padding-left: 22px; font-size: 0.96rem; line-height: 1.6; }
+  .summary-numbered-list li { margin-bottom: 4px; }
   .summary-para:last-child { margin-bottom: 0; }
   .next-actions { margin-top: 16px; padding-left: 20px; }
   .next-actions li { font-size: 0.92rem; margin-bottom: 6px; }
@@ -161,15 +191,25 @@
 </head>
 <body>
 
+<div class="page-shell">
+<aside class="sidebar">
+  <h2>Case Studies</h2>
+  <p class="sidebar-sub">All sites assessed with this model.</p>
+  <div id="site-list">
+    <p class="mono" style="font-size:0.82rem; color:var(--ink-soft);">Loading&hellip;</p>
+  </div>
+</aside>
+<div class="main-col">
+
 <div class="topnav">
   <div class="wrap">
-    <a class="back" href="index.html">← All Case Studies</a>
+    <a class="back" href="index.html">&larr; All Case Studies</a>
     <span class="brand">HERITAGE READINESS MODEL</span>
   </div>
 </div>
 
 <div id="app">
-  <div class="empty-state wrap"><p class="mono">Loading path data…</p></div>
+  <div class="empty-state wrap"><p class="mono">Loading path data&hellip;</p></div>
 </div>
 
 <footer>
@@ -178,6 +218,9 @@
     <a href="https://github.com/minteha/heritage-readiness-model" class="mono">github.com/minteha/heritage-readiness-model</a>
   </div>
 </footer>
+
+</div>
+</div>
 
 <script>
 const SUPABASE_URL = 'https://dntqhsrxbmhdbfyqnimk.supabase.co';
@@ -297,12 +340,16 @@ async function renderPath() {
     const untouched = rows.filter(r => r.stage_status === 'not_started' || Number(r.coverage_pct) === 0);
     const totalAnswered = rows.reduce((s, r) => s + Number(r.answered_questions), 0);
     const totalQuestions = rows.reduce((s, r) => s + Number(r.total_questions), 0);
-    const paragraphs = [];
-    paragraphs.push(`No one has written a recommendation for this path yet, so here is what the underlying data actually shows: ${totalAnswered} of ${totalQuestions} questions answered across ${rows.length} stages.`);
-    if (ready.length) paragraphs.push(`Fully documented: ${ready.map(r => r.stage_name).join(', ')}.`);
-    if (started.length) paragraphs.push(`Partially documented: ${started.map(r => r.stage_name).join(', ')}.`);
-    if (untouched.length) paragraphs.push(`Not started at all: ${untouched.map(r => r.stage_name).join(', ')}.`);
-    return paragraphs.map(t => `<p class="summary-para">${t}</p>`).join('');
+    const totalModelStages = allStages.length;
+
+    const numberedList = list => `<ol class="summary-numbered-list">${list.map(r => `<li>${r.stage_name}</li>`).join('')}</ol>`;
+
+    const blocks = [];
+    blocks.push(`<p class="summary-para">No one has written a recommendation for this path yet, so here is what the underlying data actually shows. This model tracks ${totalModelStages} total stages; ${rows.length} of them apply to this path, covering ${totalAnswered} of ${totalQuestions} questions. Of those ${rows.length} stages, ${ready.length} are fully complete, ${started.length} are partially documented, and ${untouched.length} have not been started at all.</p>`);
+    if (ready.length) blocks.push(`<p class="summary-para" style="margin-bottom:4px;">Fully documented (${ready.length} of ${rows.length}):</p>${numberedList(ready)}`);
+    if (started.length) blocks.push(`<p class="summary-para" style="margin-bottom:4px;">Partially documented (${started.length} of ${rows.length}):</p>${numberedList(started)}`);
+    if (untouched.length) blocks.push(`<p class="summary-para" style="margin-bottom:4px;">Not started at all (${untouched.length} of ${rows.length}):</p>${numberedList(untouched)}`);
+    return blocks.join('');
   };
 
   // Splits a long written recommendation into real paragraphs on natural
@@ -324,14 +371,15 @@ async function renderPath() {
   const renderChecklist = () => {
     const rows = stageStatus || [];
     if (!rows.length) return '';
-    const have = rows.filter(r => r.stage_status === 'ready');
-    const missing = rows.filter(r => r.stage_status !== 'ready');
-    const row = (r, ok) => `
-      <div class="checklist-row ${ok ? 'check-yes' : 'check-no'}">
-        <span class="check-mark">${ok ? '\u2705' : '\u274c'}</span>
+    const ready = rows.filter(r => r.stage_status === 'ready');
+    const partial = rows.filter(r => r.stage_status !== 'ready' && Number(r.coverage_pct) > 0);
+    const untouched = rows.filter(r => r.stage_status !== 'ready' && Number(r.coverage_pct) === 0);
+    const row = (r, mark) => `
+      <div class="checklist-row check-${mark === '\u2705' ? 'yes' : (mark === '\ud83d\udd36' ? 'partial' : 'no')}">
+        <span class="check-mark">${mark}</span>
         <span class="check-name">${r.stage_name}</span>
       </div>`;
-    return `<div class="quick-checklist">${have.map(r => row(r, true)).join('')}${missing.map(r => row(r, false)).join('')}</div>`;
+    return `<div class="quick-checklist">${ready.map(r => row(r, '\u2705')).join('')}${partial.map(r => row(r, '\ud83d\udd36')).join('')}${untouched.map(r => row(r, '\u274c')).join('')}</div>`;
   };
 
   const renderSourcePointer = p => {
@@ -500,6 +548,11 @@ async function renderPath() {
         <h2 class="section-title">Assessment</h2>
         <p class="kicker">Every stage that genuinely affects this path, site-wide facts and path-specific evidence together.</p>
         <div class="checklist-label">WHAT WE HAVE, AT A GLANCE</div>
+        <div class="checklist-legend">
+          <span>&#9989; Ready, fully documented and verified</span>
+          <span>&#128310; Partially documented, has real content, not fully verified yet</span>
+          <span>&#10060; Not started at all</span>
+        </div>
         ${renderChecklist()}
         ${stagesHtml}
       </div>
@@ -546,6 +599,69 @@ async function renderPath() {
 }
 
 renderPath().catch(e => { console.error(e); renderEmpty('Something went wrong loading this path.'); });
+
+// Shared sidebar, present on every page so switching between case studies
+// never requires a trip back to the homepage.
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+async function loadSidebarSites() {
+  const container = document.getElementById('site-list');
+  const currentSiteId = getParam('site');
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/sites?select=*&order=is_reference_case.asc,name.asc`, { headers });
+    if (!res.ok) throw new Error('fetch failed');
+    const sites = await res.json();
+    if (!sites.length) {
+      container.innerHTML = '<p class="sidebar-empty">No case studies yet.</p>';
+      return;
+    }
+    container.innerHTML = '';
+    const activeSites = sites.filter(s => !s.is_reference_case);
+    // Olive orchards are our actual primary nomination target, shown first.
+    const PRIMARY_SITE_ID = '85b8c3ba-812d-4aa6-a4ef-02664245a540';
+    activeSites.sort((a, b) => (a.site_id === PRIMARY_SITE_ID ? -1 : b.site_id === PRIMARY_SITE_ID ? 1 : 0));
+    const referenceSites = sites.filter(s => s.is_reference_case);
+
+    activeSites.forEach(s => {
+      const a = document.createElement('a');
+      a.className = `site-link site-link-active${s.site_id === currentSiteId ? ' site-link-current' : ''}`;
+      a.href = `site.html?site=${encodeURIComponent(s.site_id)}`;
+      const region = [s.region, s.country].filter(Boolean).join(', ');
+      a.innerHTML = `
+        <span class="active-tag">ACTIVE STUDY CASE</span>
+        <div class="site-name">${escapeHtml(s.name)}</div>
+        ${region ? `<div class="site-region">${escapeHtml(region)}</div>` : ''}
+      `;
+      container.appendChild(a);
+    });
+
+    const addCaseLink = document.createElement('a');
+    addCaseLink.className = 'add-case-btn';
+    addCaseLink.href = 'add-study-case.html';
+    addCaseLink.innerHTML = '+ Add New Study Case';
+    container.appendChild(addCaseLink);
+
+    referenceSites.forEach(s => {
+      const a = document.createElement('a');
+      a.className = `site-link site-link-reference${s.site_id === currentSiteId ? ' site-link-current' : ''}`;
+      a.href = `site.html?site=${encodeURIComponent(s.site_id)}`;
+      const region = [s.region, s.country].filter(Boolean).join(', ');
+      a.innerHTML = `
+        <span class="reference-tag">COMPLETE STUDY CASE</span>
+        <div class="site-name">${escapeHtml(s.name)}</div>
+        ${region ? `<div class="site-region">${escapeHtml(region)}</div>` : ''}
+      `;
+      container.appendChild(a);
+    });
+  } catch (e) {
+    container.innerHTML = '<p class="sidebar-error">Could not load case studies.</p>';
+    console.error(e);
+  }
+}
+loadSidebarSites();
 </script>
 
 </body>
