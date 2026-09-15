@@ -203,6 +203,14 @@
   .path-number { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; font-weight: 600; color: var(--ink-soft); vertical-align: middle; margin-right: 6px; }
   .not-recommended-note { background: var(--stone-dim); border-radius: 4px; padding: 10px 14px; font-size: 0.88rem; color: var(--ink-soft); margin: 12px 0 18px; }
   .readiness-link { display: block; text-align: center; font-size: 1.2rem; font-weight: 600; margin-top: 18px; text-decoration: none; }
+  .decision-methodology-link {
+    display: block; text-align: center; font-size: 1.25rem; font-weight: 700; margin: 20px 0 24px;
+    color: var(--gold); text-decoration: none; padding: 14px; border: 2px dashed var(--gold); border-radius: 6px;
+  }
+  .decision-methodology-link:hover { background: rgba(184,147,58,0.08); }
+  .profile-selector { margin: 0 0 18px; font-size: 0.9rem; }
+  .profile-selector label { font-weight: 600; margin-right: 8px; }
+  .profile-selector select { padding: 6px 10px; border: 1px solid var(--line); border-radius: 4px; font-family: 'IBM Plex Sans', sans-serif; font-size: 0.9rem; }
   .readiness-link:hover { text-decoration: underline; }
   .checklist-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--ink-soft); letter-spacing: 0.03em; margin-bottom: 8px; }
   .checklist-legend { display: flex; flex-wrap: wrap; gap: 4px 20px; font-size: 0.78rem; color: var(--ink-soft); margin-bottom: 12px; }
@@ -440,6 +448,16 @@ async function api(path) {
   return res.json();
 }
 
+async function apiRpc(fn, params) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify(params)
+  });
+  if (!res.ok) throw new Error(`RPC failed: ${fn}`);
+  return res.json();
+}
+
 function renderEmpty(message) {
   document.getElementById('app').innerHTML = `
     <div class="empty-state wrap">
@@ -450,6 +468,7 @@ function renderEmpty(message) {
 
 async function renderSite() {
   const siteId = getParam('site');
+  const selectedProfileId = getParam('profile') || null;
   if (!siteId) {
     renderEmpty('No site selected.');
     return;
@@ -473,8 +492,8 @@ async function renderSite() {
 
   document.title = `${site.name} - Heritage Readiness Model`;
 
-  const [pathComparison, stages, siteAnswers, components, threats, mapFeatures, researchLeads, allStages, siteEvidenceList, timelineEvents, readyAssessmentAnswers] = await Promise.all([
-    api(`site_path_comparison?site_id=eq.${siteId}&select=*`),
+  const [pathComparison, stages, siteAnswers, components, threats, mapFeatures, researchLeads, allStages, siteEvidenceList, timelineEvents, readyAssessmentAnswers, scoringProfiles] = await Promise.all([
+    apiRpc('get_path_comparison', { p_site_id: siteId, p_profile_id: selectedProfileId }),
     api(`stages?scope=eq.site&order=stage_number.asc`),
     api(`site_answers?site_id=eq.${siteId}&select=*,assessment_questions(prompt,stage_number,question_type),evidence_records(description,source_citation,verification_tier,file_reference)`),
     api(`site_components?site_id=eq.${siteId}&select=*`),
@@ -484,7 +503,8 @@ async function renderSite() {
     api(`stages?select=stage_number,name,description,scope,source_type&order=stage_number.asc`),
     api(`site_evidence_list?site_id=eq.${siteId}&select=*`),
     api(`timeline_events?site_id=eq.${siteId}&select=*&order=year_start.asc`),
-    api(`assessment_answers?status=eq.ready&select=answer_id,assessments!inner(site_id)&assessments.site_id=eq.${siteId}`)
+    api(`assessment_answers?status=eq.ready&select=answer_id,assessments!inner(site_id)&assessments.site_id=eq.${siteId}`),
+    api(`scoring_profiles?select=*&order=created_at.asc`)
   ]);
   const stageInfoByNumber = {};
   allStages.forEach(s => { stageInfoByNumber[s.stage_number] = s; });
@@ -1033,6 +1053,14 @@ async function renderSite() {
         })() : `
         <h2 class="section-title">Which path fits best?</h2>
         <p class="kicker">Coverage shows how much of each path's question bank has evidence so far. Status is the actual verdict: a single failed gatekeeper (for example, missing community consent) overrides coverage entirely. The recommended path is the one with the best status, which sometimes has a lower percentage than another path.</p>`}
+        <a href="path-decision-methodology.html" class="decision-methodology-link">Click here to view the methodology of path decision choosing</a>
+        ${scoringProfiles && scoringProfiles.length > 1 ? `
+        <div class="profile-selector">
+          <label for="profile-select">Viewing under scoring profile:</label>
+          <select id="profile-select">
+            ${scoringProfiles.map(p => `<option value="${p.profile_id}" ${(selectedProfileId === p.profile_id || (!selectedProfileId && p.is_default)) ? 'selected' : ''}>${p.name}${p.is_default ? ' (default)' : ''}</option>`).join('')}
+          </select>
+        </div>` : ''}
         <div class="paths">${pathCardsHtml}</div>
       </div>
     </section>
@@ -1091,6 +1119,15 @@ async function renderSite() {
       </div>
     </section>
   `;
+
+  const profileSelect = document.getElementById('profile-select');
+  if (profileSelect) {
+    profileSelect.addEventListener('change', () => {
+      const url = new URL(window.location.href);
+      url.searchParams.set('profile', profileSelect.value);
+      window.location.href = url.toString();
+    });
+  }
 }
 
 renderSite().catch(e => { console.error(e); renderEmpty('Something went wrong loading this site.'); });

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Path Decision Methodology - Heritage Readiness Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --stone: #EDE8DC; --stone-dim: #E1DACB; --ink: #23261F; --ink-soft: #4A4E42;
+    --olive: #6B7A5E; --olive-deep: #4F5C45; --gold: #B8933A; --line: rgba(35,38,31,0.14);
+    --alert: #A13D2E;
+  }
+  * { box-sizing: border-box; }
+  .page-shell { display: flex; align-items: flex-start; }
+  .sidebar {
+    width: 260px; flex-shrink: 0; background: #fff; border-right: 1px solid var(--line);
+    padding: 28px 22px; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    scrollbar-width: thin; scrollbar-color: var(--line) transparent;
+  }
+  .sidebar::-webkit-scrollbar { width: 6px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+  .sidebar h2 { font-size: 1.05rem; margin: 0 0 4px; font-family: 'Fraunces', serif; color: var(--ink); }
+  .sidebar .sidebar-sub { font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 20px; }
+  .site-link { display: block; padding: 10px 0; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); }
+  .site-link:last-child { border-bottom: none; }
+  .site-link .site-name { font-weight: 500; font-size: 0.94rem; }
+  .site-link .site-region { font-size: 0.8rem; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; margin-top: 2px; }
+  .site-link-reference { background: #F2F2F0; padding: 10px; border-radius: 4px; border-bottom: 1px solid var(--line); border-left: 3px solid #9B9B94; margin-bottom: 4px; }
+  .reference-tag { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: #7A7A73; font-weight: 600; margin-bottom: 3px; }
+  .site-link-active { background: #E6F7E9; padding: 10px; border-radius: 4px; border-bottom: 1px solid var(--line); border-left: 3px solid #2EA84A; margin-bottom: 4px; }
+  .active-tag { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: #1F7A38; font-weight: 600; margin-bottom: 3px; }
+  .add-case-btn { display: block; text-align: center; font-size: 0.85rem; font-weight: 600; padding: 10px 14px; margin: 8px 0 18px; border: 1px dashed var(--olive); border-radius: 4px; color: var(--olive-deep); text-decoration: none; }
+  .add-case-btn:hover { background: var(--stone-dim); }
+  .sidebar-error, .sidebar-empty { font-size: 0.85rem; color: var(--ink-soft); }
+  .main-col { flex: 1; min-width: 0; }
+  @media (max-width: 760px) { .page-shell { display: block; } .sidebar { position: static; height: auto; width: auto; border-right: none; border-bottom: 1px solid var(--line); } }
+
+  body { margin: 0; background: #fff; color: var(--ink); font-family: 'IBM Plex Sans', sans-serif; line-height: 1.6; font-size: 17px; }
+  h1, h2, h3 { font-family: 'Fraunces', serif; font-weight: 500; color: var(--ink); }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 28px; }
+  .topnav { background: var(--ink); color: var(--stone); padding: 18px 0; }
+  .topnav .wrap { display: flex; justify-content: space-between; align-items: center; }
+  .topnav a.back { color: var(--gold); font-size: 0.9rem; text-decoration: none; }
+  .topnav .brand { font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; color: #C9C3B2; }
+
+  .hero {
+    background: linear-gradient(rgba(35,38,31,0.72), rgba(35,38,31,0.85)), url('miilya-olive-header.jpg');
+    background-size: cover; background-position: center 30%; color: var(--stone); padding: 56px 0 42px;
+  }
+  .hero .kicker { font-family: 'IBM Plex Mono', monospace; color: var(--gold); font-size: 0.85rem; }
+  .hero h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); color: #fff; margin: 10px 0 12px; }
+  .hero p { color: #E8E4D8; max-width: 62ch; }
+
+  section { padding: 44px 0; border-bottom: 1px solid var(--line); }
+  section.alt { background: var(--stone-dim); }
+  h2.section-title { font-size: clamp(1.3rem, 2.2vw, 1.6rem); margin: 0 0 14px; }
+  .inline-count { font-size: 0.6em; color: var(--gold); font-family: 'IBM Plex Mono', monospace; font-weight: 600; vertical-align: middle; }
+  .lede { color: var(--ink-soft); max-width: 66ch; }
+
+  .step-box { background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 18px 22px; margin-bottom: 14px; }
+  .step-box .step-num { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--gold); font-weight: 600; }
+  .step-box h3 { font-size: 1.05rem; margin: 4px 0 8px; }
+  .step-box p { margin: 0; font-size: 0.94rem; color: var(--ink-soft); }
+  .step-box code { background: var(--stone-dim); padding: 2px 6px; border-radius: 3px; font-size: 0.85rem; }
+
+  .stat-row { display: flex; gap: 32px; flex-wrap: wrap; margin: 20px 0; }
+  .stat-item .num { font-family: 'Fraunces', serif; font-size: 2.2rem; color: var(--olive-deep); display: block; }
+  .stat-item .label { font-size: 0.85rem; color: var(--ink-soft); }
+
+  .weight-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.92rem; }
+  .priority-row {
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--line);
+  }
+  .priority-row-name { font-size: 0.92rem; flex: 1; min-width: 180px; }
+  .priority-options { display: flex; gap: 16px; }
+  .priority-option { display: flex; align-items: center; gap: 5px; font-size: 0.85rem; color: var(--ink-soft); cursor: pointer; }
+  .priority-option input { margin: 0; cursor: pointer; }
+  .weight-table th, .weight-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  .weight-table th { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--ink-soft); font-weight: 600; }
+  .weight-table input { width: 70px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 3px; font-family: 'IBM Plex Mono', monospace; }
+
+  .honest-box { background: #fff; border-left: 4px solid var(--alert); border-radius: 0 6px 6px 0; padding: 18px 22px; margin: 18px 0; }
+  .honest-box strong { color: var(--alert); }
+
+  .passcode-block { background: #fff; border-radius: 6px; padding: 18px 22px; margin-top: 20px; border: 1px solid var(--line); }
+  .passcode-block label { display: block; font-size: 0.85rem; font-weight: 600; margin: 14px 0 6px; }
+  .passcode-block input, .passcode-block textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; font-family: inherit; font-size: 0.95rem; }
+  .passcode-block button {
+    margin-top: 16px; font-family: 'IBM Plex Sans', sans-serif; font-size: 0.92rem; font-weight: 600;
+    padding: 10px 20px; border-radius: 4px; border: none; background: var(--gold); color: var(--ink); cursor: pointer;
+  }
+  .passcode-block button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .result-msg { margin-top: 14px; padding: 10px 14px; border-radius: 4px; font-size: 0.88rem; display: none; }
+  .result-msg.success { background: rgba(107,122,94,0.15); color: var(--olive-deep); display: block; }
+  .result-msg.error { background: rgba(161,61,46,0.12); color: var(--alert); display: block; }
+
+  .profile-card { background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 14px 18px; margin-bottom: 10px; }
+  .profile-card .name { font-weight: 600; }
+  .profile-card .meta { font-size: 0.82rem; color: var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<div class="page-shell">
+<aside class="sidebar">
+  <h2>Case Studies</h2>
+  <p class="sidebar-sub">All sites assessed with this model.</p>
+  <div id="site-list">
+    <p class="mono" style="font-size:0.82rem; color:var(--ink-soft);">Loading&hellip;</p>
+  </div>
+</aside>
+<div class="main-col">
+
+<div class="topnav">
+  <div class="wrap">
+    <a class="back" href="index.html">&larr; Methodology overview</a>
+    <span class="brand">HERITAGE READINESS MODEL</span>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="wrap">
+    <span class="kicker">THE DECISION ENGINE</span>
+    <h1>How this model actually decides which path to recommend</h1>
+    <p>Written directly in response to reviewer feedback asking exactly this question. This page describes the actual logic, exactly as it runs today, in full.</p>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <h2 class="section-title">How the internal AI decision-making actually works</h2>
+    <div class="honest-box">
+      <p><strong>This is a two-step, rule-based decision.</strong> First a pass/fail check, then a simple percentage comparison. Every question counted equally toward that percentage, until this page, and the feature below it, made that adjustable.</p>
+    </div>
+    <p class="lede">The two real steps, in order:</p>
+
+    <div class="step-box">
+      <span class="step-num">FIRST, WHAT A GATEKEEPER ACTUALLY IS</span>
+      <h3>It gives the team a genuine pass/fail check</h3>
+      <p>Most questions in this model contribute to a percentage, more evidence, higher coverage, gradually. A gatekeeper question works differently: it represents an actual UNESCO requirement that must be satisfied on its own terms, regardless of strength elsewhere. Community consent (FPIC) is the clearest example. A site can have flawless historical documentation, perfect boundary maps, and a beautifully argued case, and still genuinely require more work, because the community was never actually asked. That is exactly what happened during this project: a real conversation with our key contact raised serious, real concerns about proceeding at all, and because community consent is modeled as a gatekeeper, the system correctly reflected that this path needed real, further work, regardless of how complete everything else was. That is the entire reason gatekeepers exist: to keep one missing, non-negotiable requirement fully visible, on its own terms, no matter how strong the rest of the file looks.</p>
+    </div>
+
+    <div class="step-box">
+      <span class="step-num">STEP 1</span>
+      <h3>Gatekeeper check, a fixed rule, the same for every profile</h3>
+      <p>Every stage has some questions marked as gatekeepers, the ones that reflect an actual UNESCO requirement, community consent, legal protection, and so on, set once for the whole model. If <em>any</em> gatekeeper question for a path is in a critical or major gap, that path's status is set to that failure level immediately, regardless of how complete everything else is. This stays fixed across every profile, by design: a missing legal requirement stays a missing legal requirement no matter how a team weighs the rest.</p>
+    </div>
+
+    <div class="step-box">
+      <span class="step-num">STEP 2</span>
+      <h3>Coverage percentage, now configurable by "scoring profile"</h3>
+      <p>Among paths with no failed gatekeepers, the model recommends whichever has the highest coverage percentage. Coverage was always calculated as <code>answered questions &divide; total questions</code>, with every question worth exactly the same. That is only true under the <strong>default profile</strong>. A different profile can give some stages more weight than others, changing which path actually comes out on top, without touching the gatekeeper logic at all.</p>
+    </div>
+
+    <div class="honest-box">
+      <p><strong>Can the gatekeepers themselves be changed?</strong> The specific set tied to real UNESCO requirements stays fixed, by deliberate design. A site staying labeled "ready" while a genuine, non-negotiable requirement remains unmet would defeat the entire reason this model exists. What a future profile could reasonably allow instead: <em>adding</em> extra questions a specific team wants treated as equally critical, layered on top of the real UNESCO baseline, always keeping that baseline fully intact. Profiles can only add caution, always preserving the fixed baseline underneath, which is the honest line this model tries to hold.</p>
+    </div>
+
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <h2 class="section-title">The default profile, live right now</h2>
+    <p class="lede">Every stage weighted at 1.0, exactly reproducing the model's original behavior. This is the profile every case study uses unless a different one is explicitly selected.</p>
+    <div id="default-weights-table"></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2 class="section-title">Why more closed case studies make this genuinely better <span class="inline-count">(<span id="closed-case-count-inline">&hellip;</span> in the system today)</span></h2>
+    <div class="stat-row">
+      <div class="stat-item"><span class="num" id="closed-case-count">&hellip;</span><span class="label">closed, fully-documented case studies</span></div>
+    </div>
+    <p class="lede">Each closed case study records its evidence and its real, historical outcome together: which criteria were accepted on first reading, which needed a dialogue round, which turned out to be the actual decisive factor. That is real precedent. The more of these exist in the system, the more informed any future scoring profile can be: a team designing a new weighting scheme can look directly at which stages actually mattered in real, decided cases. Today that comparison happens by a person reading the case studies directly; having the model itself suggest weights from real outcomes is a genuine, further capability worth building toward.</p>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <h2 class="section-title">Create a new scoring profile</h2>
+    <p class="lede">Give the stages you believe matter most a higher weight, save it under a name, and the model will compute path recommendations differently for anyone who selects it. Nothing here touches the gatekeeper logic, only how coverage is calculated.</p>
+
+    <div class="passcode-block">
+      <label for="profile-name">Profile name</label>
+      <input type="text" id="profile-name" placeholder="e.g. Community-First Weighting">
+      <label for="profile-desc">Description</label>
+      <textarea id="profile-desc" rows="2" placeholder="What is this profile trying to prioritize, and why?"></textarea>
+      <label>How much should each stage matter? Pick a priority level for each one, no numbers to invent</label>
+      <p class="lede" style="margin:4px 0 12px; font-size:0.85rem;">Leave a stage on "Standard" if you have no strong opinion about it. Only mark the stages your team genuinely believes matter more, or most, for this profile.</p>
+      <div id="weight-input-list"></div>
+      <label for="profile-passcode">Your passcode</label>
+      <input type="password" id="profile-passcode" autocomplete="off">
+      <button id="save-profile-btn">Save this profile</button>
+      <div class="result-msg" id="profile-result"></div>
+    </div>
+
+    <h3 style="margin-top:32px; font-size:1.1rem;">Profiles created so far</h3>
+    <div id="profiles-list"><p class="lede">Loading&hellip;</p></div>
+  </div>
+</section>
+
+</div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://dntqhsrxbmhdbfyqnimk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRudHFoc3J4Ym1oZGJmeXFuaW1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTk1NTIsImV4cCI6MjEwNDQ3NTU1Mn0.SyxoJflfFLX3UkqK7HKaJES2DGdjuI5BjnWz3YYIsiE';
+const headers = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+async function loadSidebarSites() {
+  const container = document.getElementById('site-list');
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/sites?select=*&order=is_reference_case.asc,name.asc`, { headers });
+    const sites = await res.json();
+    if (!sites.length) { container.innerHTML = '<p class="sidebar-empty">No case studies yet.</p>'; return; }
+    container.innerHTML = '';
+    const activeSites = sites.filter(s => !s.is_reference_case);
+    const PRIMARY_SITE_ID = '85b8c3ba-812d-4aa6-a4ef-02664245a540';
+    activeSites.sort((a, b) => (a.site_id === PRIMARY_SITE_ID ? -1 : b.site_id === PRIMARY_SITE_ID ? 1 : 0));
+    const referenceSites = sites.filter(s => s.is_reference_case);
+
+    activeSites.forEach(s => {
+      const a = document.createElement('a');
+      a.className = 'site-link site-link-active';
+      a.href = `site.html?site=${encodeURIComponent(s.site_id)}`;
+      const region = [s.region, s.country].filter(Boolean).join(', ');
+      a.innerHTML = `<span class="active-tag">ACTIVE STUDY CASE</span><div class="site-name">${escapeHtml(s.name)}</div>${region ? `<div class="site-region">${escapeHtml(region)}</div>` : ''}`;
+      container.appendChild(a);
+    });
+    const addCaseLink = document.createElement('a');
+    addCaseLink.className = 'add-case-btn';
+    addCaseLink.href = 'add-study-case.html';
+    addCaseLink.innerHTML = '+ Add New Study Case';
+    container.appendChild(addCaseLink);
+    referenceSites.forEach(s => {
+      const a = document.createElement('a');
+      a.className = 'site-link site-link-reference';
+      a.href = `site.html?site=${encodeURIComponent(s.site_id)}`;
+      const region = [s.region, s.country].filter(Boolean).join(', ');
+      a.innerHTML = `<span class="reference-tag">COMPLETE STUDY CASE</span><div class="site-name">${escapeHtml(s.name)}</div>${region ? `<div class="site-region">${escapeHtml(region)}</div>` : ''}`;
+      container.appendChild(a);
+    });
+  } catch (e) {
+    container.innerHTML = '<p class="sidebar-error">Could not load case studies.</p>';
+  }
+}
+
+async function loadStagesAndDefaults() {
+  const stagesRes = await fetch(`${SUPABASE_URL}/rest/v1/stages?select=stage_number,name&order=stage_number.asc`, { headers });
+  const stages = await stagesRes.json();
+
+  document.getElementById('default-weights-table').innerHTML = `
+    <table class="weight-table"><thead><tr><th>Stage</th><th>Weight</th></tr></thead><tbody>
+      ${stages.map(s => `<tr><td>${s.stage_number}. ${s.name}</td><td class="mono">1.0</td></tr>`).join('')}
+    </tbody></table>`;
+
+  const inputList = document.getElementById('weight-input-list');
+  inputList.innerHTML = stages.map(s => `
+    <div class="priority-row" data-stage="${s.stage_number}">
+      <div class="priority-row-name">${s.stage_number}. ${s.name}</div>
+      <div class="priority-options">
+        <label class="priority-option"><input type="radio" name="priority-${s.stage_number}" value="1.0" checked> Standard</label>
+        <label class="priority-option"><input type="radio" name="priority-${s.stage_number}" value="2.0"> Important</label>
+        <label class="priority-option"><input type="radio" name="priority-${s.stage_number}" value="3.0"> Critical</label>
+      </div>
+    </div>
+  `).join('');
+
+  const countRes = await fetch(`${SUPABASE_URL}/rest/v1/sites?is_reference_case=eq.true&select=site_id`, { headers });
+  const closedCases = await countRes.json();
+  document.getElementById('closed-case-count').textContent = closedCases.length;
+  document.getElementById('closed-case-count-inline').textContent = closedCases.length;
+}
+
+async function loadProfilesList() {
+  const container = document.getElementById('profiles-list');
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/scoring_profiles?select=*&order=created_at.asc`, { headers });
+  const profiles = await res.json();
+  container.innerHTML = profiles.map(p => `
+    <div class="profile-card">
+      <div class="name">${escapeHtml(p.name)}${p.is_default ? ' (default)' : ''}</div>
+      ${p.description ? `<div class="meta">${escapeHtml(p.description)}</div>` : ''}
+      <div class="meta">${p.created_by ? 'Created by ' + escapeHtml(p.created_by) : ''}</div>
+    </div>`).join('');
+}
+
+document.getElementById('save-profile-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('save-profile-btn');
+  const resultEl = document.getElementById('profile-result');
+  const name = document.getElementById('profile-name').value;
+  const desc = document.getElementById('profile-desc').value;
+  const passcode = document.getElementById('profile-passcode').value;
+  const weights = Array.from(document.querySelectorAll('.priority-row')).map(row => {
+    const checked = row.querySelector('input[type="radio"]:checked');
+    return { stage_number: parseInt(row.dataset.stage, 10), weight: parseFloat(checked.value) };
+  }).filter(w => w.weight !== 1.0);
+
+  resultEl.className = 'result-msg';
+  if (!passcode) { resultEl.textContent = 'Enter your passcode.'; resultEl.className = 'result-msg error'; return; }
+  if (!name || name.trim().length < 3) { resultEl.textContent = 'Give the profile a real name.'; resultEl.className = 'result-msg error'; return; }
+
+  btn.disabled = true; btn.textContent = 'Saving...';
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/create_scoring_profile_with_passcode`, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_passcode: passcode, p_name: name, p_description: desc, p_stage_weights: weights })
+    });
+    const data = await res.json();
+    if (data.success) {
+      resultEl.textContent = `Saved as ${data.created_by}.`;
+      resultEl.className = 'result-msg success';
+      loadProfilesList();
+    } else {
+      resultEl.textContent = data.error || 'Something went wrong.';
+      resultEl.className = 'result-msg error';
+    }
+  } catch (e) {
+    resultEl.textContent = 'Could not reach the server.';
+    resultEl.className = 'result-msg error';
+  }
+  btn.disabled = false; btn.textContent = 'Save this profile';
+});
+
+loadSidebarSites();
+loadStagesAndDefaults();
+loadProfilesList();
+</script>
+</body>
+</html>
