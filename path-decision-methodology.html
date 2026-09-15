@@ -58,7 +58,6 @@
   section { padding: 44px 0; border-bottom: 1px solid var(--line); }
   section.alt { background: var(--stone-dim); }
   h2.section-title { font-size: clamp(1.3rem, 2.2vw, 1.6rem); margin: 0 0 14px; }
-  .inline-count { font-size: 0.6em; color: var(--gold); font-family: 'IBM Plex Mono', monospace; font-weight: 600; vertical-align: middle; }
   .lede { color: var(--ink-soft); max-width: 66ch; }
 
   .step-box { background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 18px 22px; margin-bottom: 14px; }
@@ -174,7 +173,7 @@
 
 <section>
   <div class="wrap">
-    <h2 class="section-title">Why more closed case studies make this genuinely better <span class="inline-count">(<span id="closed-case-count-inline">&hellip;</span> in the system today)</span></h2>
+    <h2 class="section-title">Why more closed case studies make this genuinely better</h2>
     <div class="stat-row">
       <div class="stat-item"><span class="num" id="closed-case-count">&hellip;</span><span class="label">closed, fully-documented case studies</span></div>
     </div>
@@ -282,7 +281,6 @@ async function loadStagesAndDefaults() {
   const countRes = await fetch(`${SUPABASE_URL}/rest/v1/sites?is_reference_case=eq.true&select=site_id`, { headers });
   const closedCases = await countRes.json();
   document.getElementById('closed-case-count').textContent = closedCases.length;
-  document.getElementById('closed-case-count-inline').textContent = closedCases.length;
 }
 
 async function loadProfilesList() {
